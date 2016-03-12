@@ -1,9 +1,10 @@
 ﻿namespace GiveLoveFirst.Boundary
 {
-    public interface IService<TDmn, TDto, TConverter>
+    public interface IService<TDmn, TDto, TConverter, TPermissions>
         where TDmn : IDomain
         where TDto : IDto
-        where TConverter : IConverter<TDmn, TDto>
+        where TConverter : IConverter<TDmn, TDto, TPermissions>, new()
+        where TPermissions : IPermissions
     {
         TDto[] GetAll();
 
@@ -14,5 +15,7 @@
         bool Update(int id, TDto dto);
 
         bool Delete(int id);
+
+        void SetPermissions(TPermissions permissions);
     }
 }

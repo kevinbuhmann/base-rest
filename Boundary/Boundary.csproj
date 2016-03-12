@@ -43,6 +43,7 @@
     <Compile Include="IConverter.cs" />
     <Compile Include="IDomain.cs" />
     <Compile Include="IDto.cs" />
+    <Compile Include="IPermissions.cs" />
     <Compile Include="IService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
