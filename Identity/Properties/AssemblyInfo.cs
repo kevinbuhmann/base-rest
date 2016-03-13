@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("DGiveLoveFirst.Dataata")]
+[assembly: AssemblyTitle("Identity")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Data")]
-[assembly: AssemblyCopyright("Copyright © Kevin Phelps 2016")]
+[assembly: AssemblyProduct("Identity")]
+[assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("945b3d33-ac06-4255-a72b-67a8d6501b3a")]
+[assembly: Guid("03101efb-29dd-4495-ab72-326bd706b620")]
 
 // Version information for an assembly consists of the following four values:
 //
