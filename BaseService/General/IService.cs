@@ -1,4 +1,6 @@
-﻿namespace GiveLoveFirst.Boundary
+﻿using BaseDomain.General;
+
+namespace BaseService.General
 {
     public interface IService<TDmn, TDto, TConverter, TPermissions>
         where TDmn : IDomain
