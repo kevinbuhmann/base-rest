@@ -1,4 +1,4 @@
-﻿namespace GiveLoveFirst.Boundary
+﻿namespace BaseService.General
 {
     public interface IDto
     {

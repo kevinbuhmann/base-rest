@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GiveLoveFirst.Boundary
+namespace BaseDomain.General
 {
     public interface IDomain
     {
