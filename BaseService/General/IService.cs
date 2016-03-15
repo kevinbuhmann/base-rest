@@ -8,9 +8,9 @@ namespace BaseService.General
         where TConverter : IConverter<TDmn, TDto, TPermissions>, new()
         where TPermissions : IPermissions
     {
-        TDto[] GetAll();
+        TDto[] GetAll(string[] includes = null);
 
-        TDto Get(int id);
+        TDto Get(int id, string[] includes = null);
 
         TDto Create(TDto dto);
 
