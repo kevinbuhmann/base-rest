@@ -55,6 +55,7 @@
     <Compile Include="BaseController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RestfulExceptionFilterAttribute.cs" />
+    <Compile Include="WebApiContractResolver.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
