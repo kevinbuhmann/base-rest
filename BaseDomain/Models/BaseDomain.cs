@@ -3,9 +3,9 @@ using General;
 using System;
 using System.Net;
 
-namespace BaseDomain
+namespace BaseDomain.Models
 {
-    public abstract class BaseEntity : IDomain
+    public abstract class BaseDomain : IDomain
     {
         public int Id { get; private set; }
 

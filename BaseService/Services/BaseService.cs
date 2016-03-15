@@ -25,36 +25,50 @@ namespace BaseService.Services
             this.dbContext = new TContext();
             this.dbSet = dbContext.Set<TDmn>();
             this.converter = new TConverter();
-            this.converter.SetPermissions(permissions);
         }
 
-        public virtual TDto[] GetAll()
+        public virtual TDto[] GetAll(string[] includes = null)
         {
-            TDmn[] domains = this.dbSet
-                .Where(domain => !domain.UtcDateDeleted.HasValue)
-                .ToArray();
+            IQueryable<TDmn> query = this.dbSet
+                .Where(dmn => !dmn.UtcDateDeleted.HasValue);
+
+            foreach (string include in includes)
+            {
+                query.Include(include);
+            }
+
+            TDmn[] domains = query.ToArray();
 
             return domains
-                .Select(domain => this.converter.Convert(domain))
+                .Select(dmn => this.converter.Convert(dmn, this.permissions, includes))
                 .ToArray();
         }
 
-        public virtual TDto Get(int id)
+        public virtual TDto Get(int id, string[] includes = null)
         {
-            TDmn domain = this.dbSet.Find(id);
-            return domain != null && !domain.UtcDateDeleted.HasValue ?
-                this.converter.Convert(domain) : null;
+            IQueryable<TDmn> query = this.dbSet
+                .Where(dmn => !dmn.UtcDateDeleted.HasValue && dmn.Id == id);
+
+            foreach (string include in includes)
+            {
+                query.Include(include);
+            }
+
+            TDmn domain = query.FirstOrDefault();
+
+            return domain != null ?
+                this.converter.Convert(domain, this.permissions, includes) : null;
         }
 
         public virtual TDto Create(TDto dto)
         {
-            TDmn domain = this.converter.Create(dto);
+            TDmn domain = this.converter.Create(dto, this.permissions);
             if (domain != null)
             {
                 this.dbContext.Entry(domain).State = EntityState.Added;
                 this.dbContext.SaveChanges();
 
-                return this.converter.Convert(domain);
+                return this.Get(domain.Id);
             }
 
             return null;
@@ -66,7 +80,7 @@ namespace BaseService.Services
             if (domain != null)
             {
                 dto.Id = id;
-                this.converter.Update(domain, dto);
+                this.converter.Update(domain, dto, this.permissions);
                 this.dbContext.SaveChanges();
             }
 
@@ -90,7 +104,6 @@ namespace BaseService.Services
         public void SetPermissions(TPermissions permissions)
         {
             this.permissions = permissions;
-            this.converter.SetPermissions(permissions);
         }
     }
 }

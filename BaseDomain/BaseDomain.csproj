@@ -49,7 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BaseEntity.cs" />
+    <Compile Include="Models\BaseDomain.cs" />
     <Compile Include="General\IDomain.cs" />
     <Compile Include="BaseDbContext.cs" />
     <Compile Include="BaseDbInitializer.cs" />
