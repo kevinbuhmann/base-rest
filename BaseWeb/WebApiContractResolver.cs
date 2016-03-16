@@ -1,8 +1,10 @@
 ﻿using BaseService.General;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System;
 
 namespace BaseWeb
 {
@@ -34,6 +36,31 @@ namespace BaseWeb
             }
 
             return property;
+        }
+
+        protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
+        {
+            var properties = base.CreateProperties(type, memberSerialization);
+            if (properties != null)
+                return properties.OrderBy(p => p.DeclaringType.CountInheritanceDepth()).ToList();
+            return properties;
+        }
+    }
+
+    public static class TypeExtensions
+    {
+        public static int CountInheritanceDepth(this Type type)
+        {
+            int count = 0;
+
+            Type baseType = type;
+            while (baseType != null)
+            {
+                count++;
+                baseType = baseType.BaseType;
+            }
+
+            return count;
         }
     }
 }
