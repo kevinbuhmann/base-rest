@@ -16,32 +16,16 @@ namespace BaseService.Services
         private readonly TContext dbContext;
         private readonly DbSet<TDmn> dbSet;
         private readonly TConverter converter;
-        private TPermissions permissions;
+
+        protected TPermissions Permissions { get; private set; }
 
         public BaseService(TPermissions permissions)
         {
-            this.permissions = permissions;
+            this.Permissions = permissions;
 
             this.dbContext = new TContext();
             this.dbSet = dbContext.Set<TDmn>();
             this.converter = new TConverter();
-        }
-
-        public virtual TDto[] GetAll(string[] includes = null)
-        {
-            IQueryable<TDmn> query = this.dbSet
-                .Where(dmn => !dmn.UtcDateDeleted.HasValue);
-
-            foreach (string include in includes)
-            {
-                query.Include(include);
-            }
-
-            TDmn[] domains = query.ToArray();
-
-            return domains
-                .Select(dmn => this.converter.Convert(dmn, this.permissions, includes))
-                .ToArray();
         }
 
         public virtual TDto Get(int id, string[] includes = null)
@@ -49,7 +33,7 @@ namespace BaseService.Services
             IQueryable<TDmn> query = this.dbSet
                 .Where(dmn => !dmn.UtcDateDeleted.HasValue && dmn.Id == id);
 
-            foreach (string include in includes)
+            foreach (string include in includes ?? new string[0])
             {
                 query.Include(include);
             }
@@ -57,12 +41,29 @@ namespace BaseService.Services
             TDmn domain = query.FirstOrDefault();
 
             return domain != null ?
-                this.converter.Convert(domain, this.permissions, includes) : null;
+                this.converter.Convert(domain, this.Permissions, includes) : null;
         }
 
-        public virtual TDto Create(TDto dto)
+        public virtual TDto[] GetAll(string[] includes = null)
         {
-            TDmn domain = this.converter.Create(dto, this.permissions);
+            IQueryable<TDmn> query = this.dbSet
+                .Where(dmn => !dmn.UtcDateDeleted.HasValue);
+
+            foreach (string include in includes ?? new string[0])
+            {
+                query.Include(include);
+            }
+
+            TDmn[] domains = query.ToArray();
+
+            return domains
+                .Select(dmn => this.converter.Convert(dmn, this.Permissions, includes))
+                .ToArray();
+        }
+
+        public TDto Create(TDto dto)
+        {
+            TDmn domain = this.ConstructDomain(dto);
             if (domain != null)
             {
                 this.dbContext.Entry(domain).State = EntityState.Added;
@@ -74,13 +75,13 @@ namespace BaseService.Services
             return null;
         }
 
-        public virtual bool Update(int id, TDto dto)
+        public bool Update(int id, TDto dto)
         {
             TDmn domain = this.dbSet.Find(id);
             if (domain != null)
             {
                 dto.Id = id;
-                this.converter.Update(domain, dto, this.permissions);
+                this.UpdateDomain(domain, dto);
                 this.dbContext.SaveChanges();
             }
 
@@ -103,7 +104,11 @@ namespace BaseService.Services
 
         public void SetPermissions(TPermissions permissions)
         {
-            this.permissions = permissions;
+            this.Permissions = permissions;
         }
+
+        protected abstract TDmn ConstructDomain(TDto dto);
+
+        protected abstract void UpdateDomain(TDmn domain, TDto dto);
     }
 }

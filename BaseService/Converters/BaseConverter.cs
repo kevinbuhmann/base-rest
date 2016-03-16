@@ -16,24 +16,9 @@ namespace BaseService.Converters
     {
         public abstract TDto Convert(TDmn domain, TPermissions permissions, string[] includes);
 
-        public abstract TDmn Create(TDto dto, TPermissions permissions);
-
-        public virtual void Update(TDmn domain, TDto dto, TPermissions permissions)
-        {
-            if (domain.Id == 0)
-            {
-                throw new RestfulException(HttpStatusCode.Conflict, "Cannot update new domain.");
-            }
-
-            if (domain.Id != dto.Id)
-            {
-                throw new RestfulException(HttpStatusCode.Conflict, "Domain and Dto must have the same id.");
-            }
-        }
-
         protected TProp HandlePermissions<TProp>(
             bool hasPermissions,
-            TDto dto,
+            List<string> excludedProperties,
             TDmn domain,
             string[] includes,
             Expression<Func<TDmn, TProp>> dmnExpression,
@@ -42,7 +27,7 @@ namespace BaseService.Converters
         {
             if (!hasPermissions)
             {
-                dto.ExcludedProperties.Add(GetMemberName(dtoExpression));
+                excludedProperties.Add(GetMemberName(dtoExpression));
             }
 
             return hasPermissions && (autoInclude || HasInclude(dtoExpression, includes)) ? ExecuteMember(dmnExpression, domain) : default(TProp);
@@ -51,7 +36,7 @@ namespace BaseService.Converters
         protected TDtoProp HandlePermissions<TDmnProp, TDtoProp>(
             bool hasPermissions,
             TPermissions permissions,
-            TDto dto,
+            List<string> excludedProperties,
             TDmn domain,
             string[] includes,
             Expression<Func<TDmn, TDmnProp>> dmnExpression,
@@ -62,21 +47,32 @@ namespace BaseService.Converters
         {
             if (!hasPermissions)
             {
-                dto.ExcludedProperties.Add(GetMemberName(dtoExpression));
+                excludedProperties.Add(GetMemberName(dtoExpression));
             }
 
             return hasPermissions && HasInclude(dtoExpression, includes) ?
                 ExecuteMemberAndConvert(permissions, domain, includes, dmnExpression, dtoExpression, converter) : default(TDtoProp);
         }
 
-        private static string GetMemberName<T, U>(Expression<Func<T, U>> expression)
+        protected TDtoProp[] HandlePermissions<TDmnProp, TDtoProp>(
+            bool hasPermissions,
+            TPermissions permissions,
+            List<string> excludedProperties,
+            TDmn domain,
+            string[] includes,
+            Expression<Func<TDmn, IEnumerable<TDmnProp>>> dmnExpression,
+            Expression<Func<TDto, TDtoProp[]>> dtoExpression,
+            IConverter<TDmnProp, TDtoProp, TPermissions> converter)
+            where TDmnProp : IDomain
+            where TDtoProp : IDto
         {
-            return (expression.Body as MemberExpression).Member.Name;
-        }
+            if (!hasPermissions)
+            {
+                excludedProperties.Add(GetMemberName(dtoExpression));
+            }
 
-        private static TProp ExecuteMember<TProp>(Expression<Func<TDmn, TProp>> expression, TDmn instance)
-        {
-            return expression.Compile().Invoke(instance);
+            return hasPermissions && HasInclude(dtoExpression, includes) ?
+                ExecuteMemberAndConvert(permissions, domain, includes, dmnExpression, dtoExpression, converter) : null;
         }
 
         private static TDtoProp ExecuteMemberAndConvert<TDmnProp, TDtoProp>(
@@ -89,14 +85,46 @@ namespace BaseService.Converters
             where TDmnProp : IDomain
             where TDtoProp : IDto
         {
-            return converter.Convert(ExecuteMember(dmnExpression, domain), permissions, GetNextIncludes(includes, GetMemberName(dtoExpression)));
+            string dtoMemberName = GetMemberName(dtoExpression).ToLower();
+            string[] nextIncludes = GetNextIncludes(includes, dtoMemberName);
+
+            TDmnProp domainProperty = ExecuteMember(dmnExpression, domain);
+            return converter.Convert(domainProperty, permissions, nextIncludes);
+        }
+
+        private static TDtoProp[] ExecuteMemberAndConvert<TDmnProp, TDtoProp>(
+            TPermissions permissions,
+            TDmn domain,
+            string[] includes,
+            Expression<Func<TDmn, IEnumerable<TDmnProp>>> dmnExpression,
+            Expression<Func<TDto, TDtoProp[]>> dtoExpression,
+            IConverter<TDmnProp, TDtoProp, TPermissions> converter)
+            where TDmnProp : IDomain
+            where TDtoProp : IDto
+        {
+            string dtoMemberName = GetMemberName(dtoExpression).ToLower();
+            string[] nextIncludes = GetNextIncludes(includes, dtoMemberName);
+
+            TDmnProp[] domainProperty = ExecuteMember(dmnExpression, domain).ToArray();
+            return domainProperty
+                .Select(i => converter.Convert(i, permissions, nextIncludes))
+                .ToArray();
+        }
+
+        private static TProp ExecuteMember<TProp>(Expression<Func<TDmn, TProp>> expression, TDmn instance)
+        {
+            return expression.Compile().Invoke(instance);
+        }
+
+        private static string GetMemberName<T, U>(Expression<Func<T, U>> expression)
+        {
+            return (expression.Body as MemberExpression).Member.Name;
         }
 
         private static bool HasInclude<TProp>(Expression<Func<TDto, TProp>> dtoExpression, string[] includes)
         {
-            string name = GetMemberName(dtoExpression).ToLower();
-
-            return GetCurrentIncludes(includes).Contains(name);
+            string dtoMemberName = GetMemberName(dtoExpression).ToLower();
+            return GetCurrentIncludes(includes).Contains(dtoMemberName);
         }
 
         private static string[] GetCurrentIncludes(string[] includes)
