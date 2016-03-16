@@ -23,8 +23,12 @@ namespace BaseWeb
                     property.ShouldSerialize = instance =>
                     {
                         IDto dto = instance as IDto;
-                        string lowerPropertyName = property.PropertyName.ToLower();
-                        return !dto.ExcludedProperties.Any(p => p.ToLower() == lowerPropertyName);
+                        if (dto.ExcludedProperties != null && dto.ExcludedProperties.Length > 0)
+                        {
+                            string lowerPropertyName = property.PropertyName.ToLower();
+                            return !dto.ExcludedProperties.Any(p => p.ToLower() == lowerPropertyName);
+                        }
+                        return true;
                     };
                 }
             }

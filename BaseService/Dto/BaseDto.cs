@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using BaseService.General;
+﻿using BaseService.General;
 
 namespace BaseService.Dto
 {
@@ -8,11 +6,6 @@ namespace BaseService.Dto
     {
         public int Id { get; set; }
 
-        public List<string> ExcludedProperties { get; private set; }
-
-        public BaseDto()
-        {
-            this.ExcludedProperties = new List<string>();
-        }
+        public string[] ExcludedProperties { get; set; }
     }
 }

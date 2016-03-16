@@ -1,5 +1,6 @@
 ﻿using BaseDomain.General;
 using BaseService.General;
+using System;
 using System.Web.Http;
 
 namespace BaseWeb
@@ -19,14 +20,20 @@ namespace BaseWeb
             this.Service = service;
         }
 
-        public virtual TDto[] Get()
+        public virtual TDto[] GetAll(string include = null)
         {
-            return this.Service.GetAll();
+            string[] includes = !string.IsNullOrEmpty(include) ?
+                include.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries) : new string[0];
+
+            return this.Service.GetAll(includes);
         }
 
-        public virtual IHttpActionResult Get(int id)
+        public virtual IHttpActionResult Get(int id, string include = null)
         {
-            TDto dto = this.Service.Get(id);
+            string[] includes = !string.IsNullOrEmpty(include) ?
+                include.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries) : new string[0];
+
+            TDto dto = this.Service.Get(id, includes);
             return dto != null ?
                 (IHttpActionResult)this.Ok(dto) : this.NotFound();
         }

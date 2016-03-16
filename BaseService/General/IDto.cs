@@ -1,11 +1,9 @@
-﻿using System.Collections.Generic;
-
-namespace BaseService.General
+﻿namespace BaseService.General
 {
     public interface IDto
     {
         int Id { get; set; }
 
-        List<string> ExcludedProperties { get; }
+        string[] ExcludedProperties { get; }
     }
 }
