@@ -1,11 +1,9 @@
 ﻿using BaseDomain.General;
 using BaseService.General;
-using General;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Net;
 
 namespace BaseService.Converters
 {
