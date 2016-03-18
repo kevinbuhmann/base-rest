@@ -1,4 +1,5 @@
 ﻿using BaseService.General;
+using General.Extensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
@@ -44,23 +45,6 @@ namespace BaseWeb
             if (properties != null)
                 return properties.OrderBy(p => p.DeclaringType.CountInheritanceDepth()).ToList();
             return properties;
-        }
-    }
-
-    public static class TypeExtensions
-    {
-        public static int CountInheritanceDepth(this Type type)
-        {
-            int count = 0;
-
-            Type baseType = type;
-            while (baseType != null)
-            {
-                count++;
-                baseType = baseType.BaseType;
-            }
-
-            return count;
         }
     }
 }
