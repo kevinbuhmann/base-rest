@@ -52,6 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions\ArrayExtensions.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="RestfulException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
