@@ -1,12 +1,14 @@
 ﻿using BaseDomain.General;
 using General;
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
 
 namespace BaseDomain.Models
 {
     public abstract class BaseDomain : IDomain
     {
+        [Key]
         public int Id { get; private set; }
 
         public DateTime UtcDateCreated { get; private set; }
