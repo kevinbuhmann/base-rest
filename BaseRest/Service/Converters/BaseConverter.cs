@@ -126,7 +126,7 @@ namespace BaseRest.Service.Converters
 
         private static string[] GetCurrentIncludes(string[] includes)
         {
-            return includes
+            return (includes ?? new string[0])
                 .Select(i => i.Split('.').First())
                 .ToArray();
         }
@@ -134,7 +134,7 @@ namespace BaseRest.Service.Converters
         private static string[] GetNextIncludes(string[] includes, string property)
         {
             string s = property + ".";
-            return includes
+            return (includes ?? new string[0])
                 .Where(i => i.StartsWith(s) && i.Length > s.Length)
                 .Select(i => i.Substring(s.Length))
                 .ToArray();
