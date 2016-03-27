@@ -13,8 +13,10 @@ namespace BaseRest.Service.Services
         where TPermissions : IPermissions
     {
         private readonly TContext dbContext;
-        private readonly DbSet<TDmn> dbSet;
-        private readonly TConverter converter;
+
+        protected DbSet<TDmn> DbSet { get; }
+
+        protected TConverter Converter { get; }
 
         protected TPermissions Permissions { get; private set; }
 
@@ -23,13 +25,13 @@ namespace BaseRest.Service.Services
             this.Permissions = permissions;
 
             this.dbContext = new TContext();
-            this.dbSet = dbContext.Set<TDmn>();
-            this.converter = new TConverter();
+            this.DbSet = dbContext.Set<TDmn>();
+            this.Converter = new TConverter();
         }
 
         public virtual TDto Get(int id, string[] includes = null)
         {
-            IQueryable<TDmn> query = this.dbSet
+            IQueryable<TDmn> query = this.DbSet
                 .Where(dmn => !dmn.UtcDateDeleted.HasValue && dmn.Id == id);
 
             foreach (string include in includes ?? new string[0])
@@ -40,12 +42,12 @@ namespace BaseRest.Service.Services
             TDmn domain = query.FirstOrDefault();
 
             return domain != null ?
-                this.converter.Convert(domain, this.Permissions, includes) : null;
+                this.Converter.Convert(domain, this.Permissions, includes) : null;
         }
 
         public virtual TDto[] GetAll(string[] includes = null)
         {
-            IQueryable<TDmn> query = this.dbSet
+            IQueryable<TDmn> query = this.DbSet
                 .Where(dmn => !dmn.UtcDateDeleted.HasValue);
 
             foreach (string include in includes ?? new string[0])
@@ -56,7 +58,7 @@ namespace BaseRest.Service.Services
             TDmn[] domains = query.ToArray();
 
             return domains
-                .Select(dmn => this.converter.Convert(dmn, this.Permissions, includes))
+                .Select(dmn => this.Converter.Convert(dmn, this.Permissions, includes))
                 .ToArray();
         }
 
@@ -76,7 +78,7 @@ namespace BaseRest.Service.Services
 
         public bool Update(int id, TDto dto)
         {
-            TDmn domain = this.dbSet.Find(id);
+            TDmn domain = this.DbSet.Find(id);
             if (domain != null)
             {
                 dto.Id = id;
@@ -89,10 +91,10 @@ namespace BaseRest.Service.Services
 
         public virtual bool Delete(int id)
         {
-            TDmn domain = this.dbSet.Find(id);
+            TDmn domain = this.DbSet.Find(id);
             if (domain != null)
             {
-                this.dbSet.Remove(domain);
+                this.DbSet.Remove(domain);
                 this.dbContext.SaveChanges();
 
                 return true;
