@@ -78,7 +78,5 @@ namespace BaseRest.Web
             return deleted ?
                 (IHttpActionResult)this.Ok() : this.InternalServerError();
         }
-
-
     }
 }
