@@ -37,7 +37,7 @@ namespace BaseRest.Web
                 (IHttpActionResult)this.Ok(dto) : this.NotFound();
         }
 
-        public virtual IHttpActionResult Put(int id, TDto dto, string include = null)
+        public virtual IHttpActionResult Put(int id, TDto dto)
         {
             if (!this.ModelState.IsValid)
             {
@@ -52,10 +52,10 @@ namespace BaseRest.Web
 
             bool updated = this.Service.Update(id, dto);
             return updated ?
-                this.Get(id, include) : this.InternalServerError();
+                this.Get(id) : this.InternalServerError();
         }
 
-        public virtual IHttpActionResult Post(TDto dto, string include = null)
+        public virtual IHttpActionResult Post(TDto dto)
         {
             if (!this.ModelState.IsValid)
             {
@@ -63,15 +63,6 @@ namespace BaseRest.Web
             }
 
             TDto created = this.Service.Create(dto);
-
-            if (!string.IsNullOrEmpty(include))
-            {
-                string[] includes = !string.IsNullOrEmpty(include) ?
-                    include.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries) : new string[0];
-
-                created = this.Service.Get(created.Id, includes);
-            }
-
             return this.CreatedAtRoute("DefaultApi", new { id = created.Id }, created);
         }
 
