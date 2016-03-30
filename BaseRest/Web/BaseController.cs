@@ -68,13 +68,13 @@ namespace BaseRest.Web
 
         public virtual IHttpActionResult Delete(int id)
         {
-            TDto existing = this.Service.Get(id);
-            if (existing == null)
+            TDto dto = this.Service.Get(id);
+            if (dto == null)
             {
                 return this.NotFound();
             }
 
-            bool deleted = this.Service.Delete(id);
+            bool deleted = this.Service.Delete(dto);
             return deleted ?
                 (IHttpActionResult)this.Ok() : this.InternalServerError();
         }

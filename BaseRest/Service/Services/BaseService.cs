@@ -70,10 +70,15 @@ namespace BaseRest.Service.Services
                 this.dbContext.Entry(domain).State = EntityState.Added;
                 this.dbContext.SaveChanges();
 
-                return this.Get(domain.Id);
+                return this.OnCreate(this.Get(domain.Id));
             }
 
             return null;
+        }
+
+        public virtual TDto OnCreate(TDto dto)
+        {
+            return dto;
         }
 
         public bool Update(int id, TDto dto)
@@ -89,9 +94,9 @@ namespace BaseRest.Service.Services
             return domain != null;
         }
 
-        public virtual bool Delete(int id)
+        public virtual bool Delete(TDto dto)
         {
-            TDmn domain = this.DbSet.Find(id);
+            TDmn domain = this.DbSet.Find(dto.Id);
             if (domain != null)
             {
                 this.DbSet.Remove(domain);
@@ -103,7 +108,7 @@ namespace BaseRest.Service.Services
             return false;
         }
 
-        public void SetPermissions(TPermissions permissions)
+        public virtual void SetPermissions(TPermissions permissions)
         {
             this.Permissions = permissions;
         }

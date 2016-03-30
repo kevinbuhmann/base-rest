@@ -14,7 +14,7 @@
 
         bool Update(int id, TDto dto);
 
-        bool Delete(int id);
+        bool Delete(TDto dto);
 
         void SetPermissions(TPermissions permissions);
     }
