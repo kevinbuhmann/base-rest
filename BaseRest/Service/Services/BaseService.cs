@@ -1,6 +1,7 @@
 ﻿using BaseRest.Boundary;
 using BaseRest.Domain;
 using BaseRest.General;
+using BaseRest.Queryable;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
@@ -32,12 +33,12 @@ namespace BaseRest.Service.Services
             this.Converter = new TConverter();
         }
 
-        public TDto Get(int id, string[] includes = null)
+        public Queryable<TDmn, TDto, TConverter, TPermissions> Get(int id)
         {
-            return this.Get(new int[] { id }, includes).FirstOrDefault();
+            return this.Get(new int[] { id });
         }
 
-        public virtual TDto[] Get(IEnumerable<int> ids = null, string[] includes = null)
+        public virtual Queryable<TDmn, TDto, TConverter, TPermissions> Get(IEnumerable<int> ids = null)
         {
             HttpStatusCode getAllStatus = this.GetAllPermissions();
 
@@ -52,16 +53,7 @@ namespace BaseRest.Service.Services
                 query = query.Where(dmn => ids.Contains(dmn.Id));
             }
 
-            foreach (string include in includes ?? new string[0])
-            {
-                query.Include(include);
-            }
-
-            TDmn[] domains = query.ToArray();
-
-            return domains
-                .Select(dmn => this.Converter.Convert(dmn, this.Permissions, includes))
-                .ToArray();
+            return new Queryable<TDmn, TDto, TConverter, TPermissions>(query, this.Permissions);
         }
 
         public TDto Create(TDto dto)
@@ -72,7 +64,7 @@ namespace BaseRest.Service.Services
                 this.dbContext.Entry(domain).State = EntityState.Added;
                 this.dbContext.SaveChanges();
 
-                return this.OnCreate(this.Get(domain.Id));
+                return this.OnCreate(this.Get(domain.Id).FirstOrDefault());
             }
 
             return null;

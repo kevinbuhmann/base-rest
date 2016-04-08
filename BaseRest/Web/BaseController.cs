@@ -1,5 +1,6 @@
 ﻿using BaseRest.Boundary;
-using System;
+using BaseRest.General;
+using System.Linq;
 using System.Web.Http;
 
 namespace BaseRest.Web
@@ -20,12 +21,12 @@ namespace BaseRest.Web
         }
 
         [Route("~/api/{controller}/{id:int}")]
-        public virtual IHttpActionResult Get(int id, string include = null)
+        public virtual IHttpActionResult Get(int id)
         {
-            string[] includes = !string.IsNullOrEmpty(include) ?
-                include.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries) : new string[0];
+            TDto dto = this.Service.Get(id)
+                .ApplyOptions(QueryOptions.FromRequestUri(this.Request.RequestUri))
+                .FirstOrDefault();
 
-            TDto dto = this.Service.Get(id, includes);
             return dto != null ?
                 (IHttpActionResult)this.Ok(dto) : this.NotFound();
         }
@@ -33,10 +34,10 @@ namespace BaseRest.Web
         [Route("~/api/{controller}")]
         public virtual IHttpActionResult Get([UrlArray]int[] ids, string include = null)
         {
-            string[] includes = !string.IsNullOrEmpty(include) ?
-                include.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries) : new string[0];
+            TDto[] dtos = this.Service.Get(ids)
+                .ApplyOptions(QueryOptions.FromRequestUri(this.Request.RequestUri))
+                .ToArray();
 
-            TDto[] dtos = this.Service.Get(ids, includes);
             return dtos != null ?
                 (IHttpActionResult)this.Ok(dtos) : this.NotFound();
         }
@@ -49,7 +50,7 @@ namespace BaseRest.Web
                 return this.BadRequest(this.ModelState);
             }
 
-            TDto existing = this.Service.Get(id);
+            TDto existing = this.Service.Get(id).FirstOrDefault();
             if (existing == null)
             {
                 return this.NotFound();
@@ -69,13 +70,13 @@ namespace BaseRest.Web
             }
 
             TDto created = this.Service.Create(dto);
-            return this.CreatedAtRoute("DefaultApi", new { id = created.Id }, created);
+            return this.Created("", created);
         }
 
         [Route("~/api/{controller}/{id:int}")]
         public virtual IHttpActionResult Delete(int id)
         {
-            TDto dto = this.Service.Get(id);
+            TDto dto = this.Service.Get(id).FirstOrDefault();
             if (dto == null)
             {
                 return this.NotFound();

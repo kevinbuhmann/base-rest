@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using BaseRest.Queryable;
+using System.Collections.Generic;
 
 namespace BaseRest.Boundary
 {
@@ -8,9 +9,9 @@ namespace BaseRest.Boundary
         where TConverter : IConverter<TDmn, TDto, TPermissions>, new()
         where TPermissions : IPermissions
     {
-        TDto Get(int id, string[] includes = null);
+        Queryable<TDmn, TDto, TConverter, TPermissions> Get(int id);
 
-        TDto[] Get(IEnumerable<int> ids, string[] includes = null);
+        Queryable<TDmn, TDto, TConverter, TPermissions> Get(IEnumerable<int> ids);
 
         TDto Create(TDto dto);
 
