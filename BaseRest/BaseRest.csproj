@@ -67,10 +67,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Boundary\IDomain.cs" />
+    <Compile Include="Domain\BaseDbConfiguration.cs" />
     <Compile Include="Domain\BaseDbContext.cs" />
     <Compile Include="Domain\BaseDbInitializer.cs" />
     <Compile Include="Domain\BaseDomain.cs" />
-    <Compile Include="Boundary\IDomain.cs" />
+    <Compile Include="Domain\OneLineFormatter.cs" />
     <Compile Include="Extensions\ArrayExtensions.cs" />
     <Compile Include="Extensions\ValidateExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />

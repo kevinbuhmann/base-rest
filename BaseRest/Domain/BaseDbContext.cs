@@ -1,14 +1,17 @@
 ﻿using BaseRest.Boundary;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace BaseRest.Domain
 {
+    [DbConfigurationType(typeof(BaseDbConfiguration))]
     public class BaseDbContext : DbContext
     {
         public BaseDbContext(string nameOrConnectionString) : base(nameOrConnectionString)
         {
+            this.Database.Log = (logText) => Debug.WriteLine(logText);
         }
 
         public override int SaveChanges()
