@@ -7,8 +7,8 @@ using System.Linq.Expressions;
 namespace BaseRest.Service.Converters
 {
     public abstract class BaseConverter<TDmn, TDto, TPermissions> : IConverter<TDmn, TDto, TPermissions>
-        where TDmn : IDomain
-        where TDto : IDto
+        where TDmn : class, IDomain
+        where TDto : class, IDto
         where TPermissions : IPermissions
     {
         public abstract TDto Convert(TDmn domain, TPermissions permissions, string[] includes);
@@ -39,8 +39,8 @@ namespace BaseRest.Service.Converters
             Expression<Func<TDmn, TDmnProp>> dmnExpression,
             Expression<Func<TDto, TDtoProp>> dtoExpression,
             IConverter<TDmnProp, TDtoProp, TPermissions> converter)
-            where TDmnProp : IDomain
-            where TDtoProp : IDto
+            where TDmnProp : class, IDomain
+            where TDtoProp : class, IDto
         {
             if (!hasPermissions)
             {
@@ -60,8 +60,8 @@ namespace BaseRest.Service.Converters
             Expression<Func<TDmn, IEnumerable<TDmnProp>>> dmnExpression,
             Expression<Func<TDto, TDtoProp[]>> dtoExpression,
             IConverter<TDmnProp, TDtoProp, TPermissions> converter)
-            where TDmnProp : IDomain
-            where TDtoProp : IDto
+            where TDmnProp : class, IDomain
+            where TDtoProp : class, IDto
         {
             if (!hasPermissions)
             {
@@ -79,14 +79,16 @@ namespace BaseRest.Service.Converters
             Expression<Func<TDmn, TDmnProp>> dmnExpression,
             Expression<Func<TDto, TDtoProp>> dtoExpression,
             IConverter<TDmnProp, TDtoProp, TPermissions> converter)
-            where TDmnProp : IDomain
-            where TDtoProp : IDto
+            where TDmnProp : class, IDomain
+            where TDtoProp : class, IDto
         {
             string dtoMemberName = GetMemberName(dtoExpression).ToLower();
             string[] nextIncludes = GetNextIncludes(includes, dtoMemberName);
 
             TDmnProp domainProperty = ExecuteMember(dmnExpression, domain);
-            return converter.Convert(domainProperty, permissions, nextIncludes);
+
+            return !domainProperty.UtcDateDeleted.HasValue ?
+                converter.Convert(domainProperty, permissions, nextIncludes) : null;
         }
 
         private static TDtoProp[] ExecuteMemberAndConvert<TDmnProp, TDtoProp>(
@@ -96,13 +98,16 @@ namespace BaseRest.Service.Converters
             Expression<Func<TDmn, IEnumerable<TDmnProp>>> dmnExpression,
             Expression<Func<TDto, TDtoProp[]>> dtoExpression,
             IConverter<TDmnProp, TDtoProp, TPermissions> converter)
-            where TDmnProp : IDomain
-            where TDtoProp : IDto
+            where TDmnProp : class, IDomain
+            where TDtoProp : class, IDto
         {
             string dtoMemberName = GetMemberName(dtoExpression).ToLower();
             string[] nextIncludes = GetNextIncludes(includes, dtoMemberName);
 
-            TDmnProp[] domainProperty = ExecuteMember(dmnExpression, domain).ToArray();
+            TDmnProp[] domainProperty = ExecuteMember(dmnExpression, domain)
+                .Where(dmn => !dmn.UtcDateDeleted.HasValue)
+                .ToArray();
+
             return domainProperty
                 .Select(i => converter.Convert(i, permissions, nextIncludes))
                 .ToArray();

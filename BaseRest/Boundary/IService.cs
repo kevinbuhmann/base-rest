@@ -1,8 +1,8 @@
 ﻿namespace BaseRest.Boundary
 {
     public interface IService<TDmn, TDto, TConverter, TPermissions>
-        where TDmn : IDomain
-        where TDto : IDto
+        where TDmn : class, IDomain
+        where TDto : class, IDto
         where TConverter : IConverter<TDmn, TDto, TPermissions>, new()
         where TPermissions : IPermissions
     {
