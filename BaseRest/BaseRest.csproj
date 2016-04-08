@@ -67,6 +67,7 @@
     <Compile Include="Domain\BaseDomain.cs" />
     <Compile Include="Boundary\IDomain.cs" />
     <Compile Include="Extensions\ArrayExtensions.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Service\Converters\BaseConverter.cs" />
@@ -78,6 +79,9 @@
     <Compile Include="Service\Services\BaseService.cs" />
     <Compile Include="Web\BaseController.cs" />
     <Compile Include="General\RestfulException.cs" />
+    <Compile Include="Web\UrlArrayAttribute.cs" />
+    <Compile Include="Web\WebApiDirectRouteProvider.cs" />
+    <Compile Include="Web\CommaDelimitedArrayModelBinder.cs" />
     <Compile Include="Web\RestfulExceptionFilterAttribute.cs" />
     <Compile Include="Web\WebApiContractResolver.cs" />
   </ItemGroup>

@@ -1,6 +1,8 @@
 ﻿using BaseRest.Boundary;
 using System;
+using System.Linq;
 using System.Web.Http;
+using System.Web.Http.ModelBinding;
 
 namespace BaseRest.Web
 {
@@ -19,14 +21,7 @@ namespace BaseRest.Web
             this.Service = service;
         }
 
-        public virtual TDto[] GetAll(string include = null)
-        {
-            string[] includes = !string.IsNullOrEmpty(include) ?
-                include.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries) : new string[0];
-
-            return this.Service.GetAll(includes);
-        }
-
+        [Route("~/api/{controller}/{id:int}")]
         public virtual IHttpActionResult Get(int id, string include = null)
         {
             string[] includes = !string.IsNullOrEmpty(include) ?
@@ -37,6 +32,18 @@ namespace BaseRest.Web
                 (IHttpActionResult)this.Ok(dto) : this.NotFound();
         }
 
+        [Route("~/api/{controller}")]
+        public virtual IHttpActionResult Get([UrlArray]int[] ids, string include = null)
+        {
+            string[] includes = !string.IsNullOrEmpty(include) ?
+                include.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries) : new string[0];
+
+            TDto[] dtos = this.Service.Get(ids, includes);
+            return dtos != null ?
+                (IHttpActionResult)this.Ok(dtos) : this.NotFound();
+        }
+
+        [Route("~/api/{controller}/{id:int}")]
         public virtual IHttpActionResult Put(int id, TDto dto)
         {
             if (!this.ModelState.IsValid)
@@ -55,6 +62,7 @@ namespace BaseRest.Web
                 this.Get(id) : this.InternalServerError();
         }
 
+        [Route("~/api/{controller}")]
         public virtual IHttpActionResult Post(TDto dto)
         {
             if (!this.ModelState.IsValid)
@@ -66,6 +74,7 @@ namespace BaseRest.Web
             return this.CreatedAtRoute("DefaultApi", new { id = created.Id }, created);
         }
 
+        [Route("~/api/{controller}/{id:int}")]
         public virtual IHttpActionResult Delete(int id)
         {
             TDto dto = this.Service.Get(id);

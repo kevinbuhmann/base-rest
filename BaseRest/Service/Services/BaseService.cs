@@ -1,7 +1,10 @@
 ﻿using BaseRest.Boundary;
 using BaseRest.Domain;
+using BaseRest.General;
+using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Net;
 
 namespace BaseRest.Service.Services
 {
@@ -29,26 +32,25 @@ namespace BaseRest.Service.Services
             this.Converter = new TConverter();
         }
 
-        public virtual TDto Get(int id, string[] includes = null)
+        public TDto Get(int id, string[] includes = null)
         {
-            IQueryable<TDmn> query = this.DbSet
-                .Where(dmn => !dmn.UtcDateDeleted.HasValue && dmn.Id == id);
-
-            foreach (string include in includes ?? new string[0])
-            {
-                query.Include(include);
-            }
-
-            TDmn domain = query.FirstOrDefault();
-
-            return domain != null ?
-                this.Converter.Convert(domain, this.Permissions, includes) : null;
+            return this.Get(new int[] { id }, includes).FirstOrDefault();
         }
 
-        public virtual TDto[] GetAll(string[] includes = null)
+        public virtual TDto[] Get(IEnumerable<int> ids = null, string[] includes = null)
         {
-            IQueryable<TDmn> query = this.DbSet
-                .Where(dmn => !dmn.UtcDateDeleted.HasValue);
+            HttpStatusCode getAllStatus = this.GetAllPermissions();
+
+            IQueryable<TDmn> query = this.DbSet.Where(dmn => !dmn.UtcDateDeleted.HasValue);
+
+            if (ids == null && getAllStatus != HttpStatusCode.OK)
+            {
+                throw new RestfulException(getAllStatus);
+            }
+            else if (ids != null && ids.Any())
+            {
+                query = query.Where(dmn => ids.Contains(dmn.Id));
+            }
 
             foreach (string include in includes ?? new string[0])
             {
@@ -112,6 +114,8 @@ namespace BaseRest.Service.Services
         {
             this.Permissions = permissions;
         }
+
+        protected abstract HttpStatusCode GetAllPermissions();
 
         protected abstract TDmn ConstructDomain(TDto dto);
 
