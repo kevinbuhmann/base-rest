@@ -28,12 +28,12 @@ namespace BaseRest.Queryable
 
         public Expression Expression { get; }
 
-        public Queryable(IQueryable<TDmn> internalQuery, TPermissions permissions, HttpStatusCode getAllPermissions)
+        public Queryable(IQueryable<TDmn> internalQuery, TPermissions permissions, HttpStatusCode getAllPermissions, bool isGetAll)
         {
             internalQuery.ValidateNotNullParameter(nameof(internalQuery));
             permissions.ValidateNotNullParameter(nameof(permissions));
 
-            this.Provider = new QueryProvider<TDmn, TDto, TConverter, TPermissions>(internalQuery, permissions, getAllPermissions);
+            this.Provider = new QueryProvider<TDmn, TDto, TConverter, TPermissions>(internalQuery, permissions, getAllPermissions, isGetAll);
             this.Expression = Expression.Constant(this);
         }
 

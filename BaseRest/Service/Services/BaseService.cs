@@ -40,16 +40,18 @@ namespace BaseRest.Service.Services
 
         public virtual Queryable<TDmn, TDto, TConverter, TPermissions> Get(IEnumerable<int> ids = null)
         {
+            bool isGetAll = true;
             IQueryable<TDmn> query = this.DbSet.Where(dmn => !dmn.UtcDateDeleted.HasValue);
 
             if (ids != null && ids.Any())
             {
+                isGetAll = false;
                 query = query.Where(dmn => ids.Contains(dmn.Id));
             }
 
             HttpStatusCode getAllPermissions = this.GetAllPermissions();
 
-            return new Queryable<TDmn, TDto, TConverter, TPermissions>(query, this.Permissions, getAllPermissions);
+            return new Queryable<TDmn, TDto, TConverter, TPermissions>(query, this.Permissions, getAllPermissions, isGetAll);
         }
 
         public TDto Create(TDto dto)

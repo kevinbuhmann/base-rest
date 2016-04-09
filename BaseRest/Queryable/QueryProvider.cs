@@ -21,9 +21,9 @@ namespace BaseRest.Queryable
         private readonly HttpStatusCode getAllPermissions;
 
         private List<string> includes;
-        private bool isFiltered;
+        private bool isGetAll;
 
-        internal QueryProvider(IQueryable<TDmn> internalQuery, TPermissions permissions, HttpStatusCode getAllPermissions)
+        internal QueryProvider(IQueryable<TDmn> internalQuery, TPermissions permissions, HttpStatusCode getAllPermissions, bool isGetAll)
         {
             internalQuery.ValidateNotNullParameter(nameof(internalQuery));
             permissions.ValidateNotNullParameter(nameof(permissions));
@@ -32,7 +32,7 @@ namespace BaseRest.Queryable
             this.getAllPermissions = getAllPermissions;
 
             this.includes = new List<string>();
-            this.isFiltered = false;
+            this.isGetAll = isGetAll;
 
             this.InternalQuery = internalQuery;
         }
@@ -53,7 +53,7 @@ namespace BaseRest.Queryable
                 throw new RestfulException(filterPermissions);
             }
 
-            this.isFiltered = true;
+            this.isGetAll = false;
             this.InternalQuery = filter.Apply(this.InternalQuery);
         }
 
@@ -86,7 +86,7 @@ namespace BaseRest.Queryable
 
         private object Execute(Expression expression, bool isEnumerable)
         {
-            if (this.getAllPermissions != HttpStatusCode.OK && !this.isFiltered)
+            if (this.getAllPermissions != HttpStatusCode.OK && this.isGetAll)
             {
                 throw new RestfulException(this.getAllPermissions);
             }
