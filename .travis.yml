@@ -1,0 +1,9 @@
+language: csharp, node_js
+solution: GiveLoveFirst.sln
+install:
+  - npm install
+  - npm install -g gulp
+  - nuget restore GiveLoveFirst.sln
+script:
+  - xbuild /p:Configuration=Release GiveLoveFirst.sln
+  - gulp build
