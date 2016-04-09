@@ -1,6 +1,8 @@
-﻿using System;
+﻿using BaseRest.General;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 
 namespace BaseRest.Extensions
@@ -25,27 +27,36 @@ namespace BaseRest.Extensions
         {
             object result;
 
-            var constructors = type.GetConstructors()
-                .Where(i => i.GetParameters().Count() == paramArray.Length
-                && i.GetParameters().All(j => j.ParameterType.IsConvertibleType()));
-            if (constructors.Count() == 1)
+            ConstructorInfo[] callableConstructors = type.GetConstructors()
+                .Where(i => i.GetParameters().All(j => j.ParameterType.IsConvertibleType()))
+                .ToArray();
+            if (!callableConstructors.Any())
             {
-                ParameterInfo[] parameterInfo = constructors.First().GetParameters();
+                throw new Exception("Type cannot be instantiated from string array because no callable constructors exist.");
+            }
+
+            ConstructorInfo[] matchingConstructors = callableConstructors
+                .Where(i => i.GetParameters().Count() == paramArray.Length)
+                .ToArray();
+            if (matchingConstructors.Length == 1)
+            {
+                ConstructorInfo constructor = matchingConstructors[0];
+                ParameterInfo[] parameterInfo = constructor.GetParameters();
                 List<object> parameters = new List<object>();
                 for (int i = 0; i < paramArray.Length; i++)
                 {
                     parameters.Add(paramArray[i].Replace(@"\_", "_").ConvertTo(parameterInfo[i].ParameterType));
                 }
 
-                result = constructors.First().Invoke(parameters.ToArray());
+                result = constructor.Invoke(parameters.ToArray());
             }
-            else if (constructors.Any())
+            else if (matchingConstructors.Any())
             {
-                throw new Exception("Multiple ambiguous constructors found.");
+                throw new Exception("Type cannot be instantiated from string array because multiple matching callable constructors exist.");
             }
             else
             {
-                throw new Exception("No constructor found.");
+                throw new RestfulException(HttpStatusCode.BadRequest); // callable constructor(s) exist, but number of parameters is incorrect
             }
 
             return result;
@@ -66,7 +77,6 @@ namespace BaseRest.Extensions
             Type innerType = Nullable.GetUnderlyingType(type);
             type = innerType ?? type;
 
-            // These types exactly match IConvertible
             Type[] types = new Type[]
             {
                 typeof(bool),

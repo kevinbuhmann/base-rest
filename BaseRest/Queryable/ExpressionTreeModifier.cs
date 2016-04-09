@@ -5,17 +5,17 @@ namespace BaseRest.Queryable
 {
     internal class ExpressionTreeModifier : ExpressionVisitor
     {
-        private readonly IQueryable all;
+        private readonly IQueryable queryable;
 
-        internal ExpressionTreeModifier(IQueryable all)
+        internal ExpressionTreeModifier(IQueryable queryable)
         {
-            this.all = all;
+            this.queryable = queryable;
         }
 
-        protected override Expression VisitConstant(ConstantExpression c)
+        protected override Expression VisitConstant(ConstantExpression constant)
         {
-            return (c.Type.IsGenericType && c.Type.GetGenericTypeDefinition() == typeof(Queryable<,,,>)) ?
-                Expression.Constant(this.all) : c;
+            return (constant.Type.IsGenericType && constant.Type.GetGenericTypeDefinition() == typeof(Queryable<,,,>)) ?
+                Expression.Constant(this.queryable) : constant;
         }
     }
 }

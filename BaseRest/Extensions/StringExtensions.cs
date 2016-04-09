@@ -16,7 +16,7 @@ namespace BaseRest.Extensions
 
             if (type.IsConvertibleType() == false)
             {
-                throw new Exception("Type must be convertible type");
+                throw new Exception("type not convertible");
             }
 
             if (type.IsArray)
@@ -36,14 +36,9 @@ namespace BaseRest.Extensions
                 Type innerType = Nullable.GetUnderlyingType(type);
                 if (innerType == null)
                 {
-                    if (type.IsEnum)
-                    {
-                        result = Enum.Parse(type, value, true);
-                    }
-                    else
-                    {
-                        result = Convert.ChangeType(value, type);
-                    }
+                    result = type.IsEnum ?
+                        Enum.Parse(type, value, true) :
+                        Convert.ChangeType(value, type);
                 }
                 else if (string.IsNullOrEmpty(value))
                 {

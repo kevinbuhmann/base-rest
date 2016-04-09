@@ -101,7 +101,7 @@ namespace BaseRest.Queryable
                 .ToArray()
                 .AsQueryable();
 
-            var treeCopier = new ExpressionTreeModifier(dtos);
+            ExpressionTreeModifier treeCopier = new ExpressionTreeModifier(dtos);
             Expression newExpressionTree = treeCopier.Visit(expression);
 
             return isEnumerable ?
