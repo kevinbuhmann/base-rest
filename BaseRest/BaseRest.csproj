@@ -68,6 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Boundary\IDomain.cs" />
+    <Compile Include="Boundary\IFilter.cs" />
     <Compile Include="Domain\BaseDbConfiguration.cs" />
     <Compile Include="Domain\BaseDbContext.cs" />
     <Compile Include="Domain\BaseDbInitializer.cs" />

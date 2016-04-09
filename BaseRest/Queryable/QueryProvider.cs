@@ -1,11 +1,13 @@
 ﻿using BaseRest.Boundary;
 using BaseRest.Extensions;
+using BaseRest.General;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
 
 namespace BaseRest.Queryable
 {
@@ -16,31 +18,49 @@ namespace BaseRest.Queryable
         where TPermissions : IPermissions
     {
         private readonly TPermissions permissions;
+        private readonly HttpStatusCode getAllPermissions;
 
         private List<string> includes;
+        private bool isFiltered;
 
-        internal QueryProvider(IQueryable<TDmn> internalQuery, TPermissions permissions)
+        internal QueryProvider(IQueryable<TDmn> internalQuery, TPermissions permissions, HttpStatusCode getAllPermissions)
         {
             internalQuery.ValidateNotNullParameter(nameof(internalQuery));
             permissions.ValidateNotNullParameter(nameof(permissions));
 
             this.permissions = permissions;
+            this.getAllPermissions = getAllPermissions;
+
             this.includes = new List<string>();
+            this.isFiltered = false;
 
             this.InternalQuery = internalQuery;
         }
 
+        public IQueryable<TDmn> InternalQuery { get; private set; }
+
         public void Include(string path)
         {
             this.includes.Add(path);
-            this.InternalQuery.Include(path);
+            this.InternalQuery = this.InternalQuery.Include(path);
         }
 
-        public IQueryable<TDmn> InternalQuery { get; }
+        public void Filter(IFilter<TDmn, TPermissions> filter)
+        {
+            HttpStatusCode filterPermissions = filter.HasPermissions(this.permissions);
+            if (filterPermissions != HttpStatusCode.OK)
+            {
+                throw new RestfulException(filterPermissions);
+            }
+
+            this.isFiltered = true;
+            this.InternalQuery = filter.Apply(this.InternalQuery);
+        }
 
         public IQueryable CreateQuery(Expression expression)
         {
-            return (IQueryable)Activator.CreateInstance(typeof(Queryable<,,,>).MakeGenericType(typeof(TDto), typeof(TDmn), typeof(TConverter), typeof(TPermissions)), new object[] { this, expression });
+            Type queryType = typeof(Queryable<,,,>).MakeGenericType(typeof(TDto), typeof(TDmn), typeof(TConverter), typeof(TPermissions));
+            return (IQueryable)Activator.CreateInstance(queryType, new object[] { this, expression });
         }
 
         public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
@@ -66,10 +86,15 @@ namespace BaseRest.Queryable
 
         private object Execute(Expression expression, bool isEnumerable)
         {
-            TConverter converter = new TConverter();
-            string[] includes = this.includes.ToArray();
+            if (this.getAllPermissions != HttpStatusCode.OK && !this.isFiltered)
+            {
+                throw new RestfulException(this.getAllPermissions);
+            }
 
             TDmn[] domains = this.InternalQuery.ToArray();
+
+            TConverter converter = new TConverter();
+            string[] includes = this.includes.ToArray();
 
             IQueryable<TDto> dtos = domains
                 .Select(dmn => converter.Convert(dmn, this.permissions, includes))

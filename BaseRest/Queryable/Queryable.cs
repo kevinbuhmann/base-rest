@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
 
 namespace BaseRest.Queryable
 {
@@ -27,16 +28,16 @@ namespace BaseRest.Queryable
 
         public Expression Expression { get; }
 
-        public Queryable(IQueryable<TDmn> internalQuery, TPermissions permissions)
+        public Queryable(IQueryable<TDmn> internalQuery, TPermissions permissions, HttpStatusCode getAllPermissions)
         {
             internalQuery.ValidateNotNullParameter(nameof(internalQuery));
             permissions.ValidateNotNullParameter(nameof(permissions));
 
-            this.Provider = new QueryProvider<TDmn, TDto, TConverter, TPermissions>(internalQuery, permissions);
+            this.Provider = new QueryProvider<TDmn, TDto, TConverter, TPermissions>(internalQuery, permissions, getAllPermissions);
             this.Expression = Expression.Constant(this);
         }
 
-        public Queryable(IQueryProvider provider, Expression expression)
+        internal Queryable(IQueryProvider provider, Expression expression)
         {
             this.Provider = provider;
             this.Expression = expression;
@@ -48,16 +49,24 @@ namespace BaseRest.Queryable
             return this;
         }
 
-        public Queryable<TDmn, TDto, TConverter, TPermissions> ApplyOptions(QueryOptions options)
+        public Queryable<TDmn, TDto, TConverter, TPermissions> Filter(IFilter<TDmn, TPermissions> filter)
+        {
+            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).Filter(filter);
+            return this;
+        }
+
+        public Queryable<TDmn, TDto, TConverter, TPermissions> ApplyOptions(QueryOptions<TDmn, TDto, TPermissions> options)
         {
             options.ValidateNotNullParameter(nameof(options));
 
-            if (options.Includes != null)
+            foreach (string include in options.Includes ?? new string[0])
             {
-                foreach (string include in options.Includes)
-                {
-                    this.Include(include);
-                }
+                this.Include(include);
+            }
+
+            foreach (IFilter<TDmn, TPermissions> filter in options.Filters ?? new IFilter<TDmn, TPermissions>[0])
+            {
+                this.Filter(filter);
             }
 
             return this;
