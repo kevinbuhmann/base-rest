@@ -1,6 +1,7 @@
 ﻿using BaseRest.Boundary;
 using BaseRest.Extensions;
 using BaseRest.General;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -56,6 +57,36 @@ namespace BaseRest.Queryable
         public void OrderBy(string ordering)
         {
             this.internalQuery = this.internalQuery.OrderBy(ordering);
+        }
+
+        public void OrderBy<TKey>(Expression<Func<TDmn, TKey>> keySelector)
+        {
+            this.internalQuery = this.internalQuery.OrderBy(keySelector);
+        }
+
+        public void OrderBy<TKey>(Expression<Func<TDmn, TKey>> keySelector, IComparer<TKey> comparer)
+        {
+            this.internalQuery = this.internalQuery.OrderBy(keySelector, comparer);
+        }
+
+        public void OrderByDescending<TKey>(Expression<Func<TDmn, TKey>> keySelector)
+        {
+            this.internalQuery = this.internalQuery.OrderByDescending(keySelector);
+        }
+
+        public void OrderByDescending<TKey>(Expression<Func<TDmn, TKey>> keySelector, IComparer<TKey> comparer)
+        {
+            this.internalQuery = this.internalQuery.OrderByDescending(keySelector, comparer);
+        }
+
+        public void Skip(int count)
+        {
+            this.internalQuery = this.internalQuery.Skip(count);
+        }
+
+        public void Take(int count)
+        {
+            this.internalQuery = this.internalQuery.Take(count);
         }
 
         public void Include(string path)

@@ -5,6 +5,17 @@ namespace BaseRest.Extensions
 {
     public static class StringExtensions
     {
+        public static int? ToIntOrNull(this string str)
+        {
+            int value = 0;
+            bool parsed = false;
+            if (!string.IsNullOrEmpty(str))
+            {
+                parsed = int.TryParse(str, out value);
+            }
+            return parsed ? value : (int?)null;
+        }
+
         public static string CamelCaseToSplitLower(this string source)
         {
             return Regex.Replace(source, "([A-Z_])", "-$1", RegexOptions.Compiled).ToLower().Trim(new char[] { '-' });

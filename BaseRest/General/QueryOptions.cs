@@ -18,12 +18,18 @@ namespace BaseRest.General
 
         public string[] OrderBy { get; }
 
+        public int? Skip { get; }
+
+        public int? Take { get; }
+
         public string[] Includes { get; }
 
-        public QueryOptions(IFilter<TDmn, TPermissions>[] filters, string[] orderBy, string[] includes)
+        public QueryOptions(IFilter<TDmn, TPermissions>[] filters, string[] orderBy, int? skip, int? take, string[] includes)
         {
             this.Filters = filters;
             this.OrderBy = orderBy;
+            this.Skip = skip;
+            this.Take = take;
             this.Includes = includes;
         }
 
@@ -44,12 +50,20 @@ namespace BaseRest.General
             string[] orderBy = !string.IsNullOrEmpty(orderByList) ?
                 orderByList.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries) : null;
 
+            // ?skip=5
+            string skipNumber = query["skip"];
+            int? skip = !string.IsNullOrEmpty(skipNumber) ? skipNumber.ToIntOrNull() : null;
+
+            // ?take=5
+            string takeNumber = query["take"];
+            int? take = !string.IsNullOrEmpty(takeNumber) ? takeNumber.ToIntOrNull() : null;
+
             // ?include=postalcode,funds
             string includeList = query["include"];
             string[] includes = !string.IsNullOrEmpty(includeList) ?
                 includeList.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries) : null;
 
-            return new QueryOptions<TDmn, TDto, TPermissions>(filters, orderBy, includes);
+            return new QueryOptions<TDmn, TDto, TPermissions>(filters, orderBy, skip, take, includes);
         }
 
         private static IFilter<TDmn, TPermissions> GetFilter(string filterString)

@@ -11,7 +11,7 @@ using System.Net;
 
 namespace BaseRest.Queryable
 {
-    public sealed class Queryable<TDmn, TDto, TConverter, TPermissions> : IOrderedQueryable<TDto>
+    public sealed class Queryable<TDmn, TDto, TConverter, TPermissions> : IQueryable<TDto>
         where TDmn : class, IDomain
         where TDto : class, IDto
         where TConverter : IConverter<TDmn, TDto, TPermissions>, new()
@@ -56,6 +56,42 @@ namespace BaseRest.Queryable
             return this;
         }
 
+        public Queryable<TDmn, TDto, TConverter, TPermissions> OrderBy<TKey>(Expression<Func<TDmn, TKey>> keySelector)
+        {
+            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).OrderBy(keySelector);
+            return this;
+        }
+
+        public Queryable<TDmn, TDto, TConverter, TPermissions> OrderBy<TKey>(Expression<Func<TDmn, TKey>> keySelector, IComparer<TKey> comparer)
+        {
+            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).OrderBy(keySelector, comparer);
+            return this;
+        }
+
+        public Queryable<TDmn, TDto, TConverter, TPermissions> OrderByDescending<TKey>(Expression<Func<TDmn, TKey>> keySelector)
+        {
+            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).OrderByDescending(keySelector);
+            return this;
+        }
+
+        public Queryable<TDmn, TDto, TConverter, TPermissions> OrderByDescending<TKey>(Expression<Func<TDmn, TKey>> keySelector, IComparer<TKey> comparer)
+        {
+            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).OrderByDescending(keySelector, comparer);
+            return this;
+        }
+
+        public Queryable<TDmn, TDto, TConverter, TPermissions> Skip(int count)
+        {
+            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).Skip(count);
+            return this;
+        }
+
+        public Queryable<TDmn, TDto, TConverter, TPermissions> Take(int count)
+        {
+            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).Take(count);
+            return this;
+        }
+
         public Queryable<TDmn, TDto, TConverter, TPermissions> Include(string path)
         {
             (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).Include(path);
@@ -76,6 +112,16 @@ namespace BaseRest.Queryable
             if (!string.IsNullOrEmpty(ordering))
             {
                 this.OrderBy(ordering);
+            }
+
+            if (options.Skip.HasValue)
+            {
+                this.Skip(options.Skip.Value);
+            }
+
+            if (options.Take.HasValue)
+            {
+                this.Take(options.Take.Value);
             }
 
             foreach (string include in options.Includes ?? new string[0])
