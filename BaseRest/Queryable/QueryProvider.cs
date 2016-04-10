@@ -1,17 +1,17 @@
 ﻿using BaseRest.Boundary;
 using BaseRest.Extensions;
 using BaseRest.General;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Linq.Dynamic;
 using System.Linq.Expressions;
 using System.Net;
 
 namespace BaseRest.Queryable
 {
-    public class QueryProvider<TDmn, TDto, TConverter, TPermissions> : IQueryProvider
+    public sealed class QueryProvider<TDmn, TDto, TConverter, TPermissions> : IQueryProvider
         where TDmn : class, IDomain
         where TDto : class, IDto
         where TConverter : IConverter<TDmn, TDto, TPermissions>, new()
@@ -20,8 +20,11 @@ namespace BaseRest.Queryable
         private readonly TPermissions permissions;
         private readonly HttpStatusCode getAllPermissions;
 
-        private List<string> includes;
+        private IQueryable<TDmn> internalQuery;
         private bool isGetAll;
+
+        private List<IFilter<TDmn, TPermissions>> filters;
+        private List<string> includes;
 
         internal QueryProvider(IQueryable<TDmn> internalQuery, TPermissions permissions, HttpStatusCode getAllPermissions, bool isGetAll)
         {
@@ -31,18 +34,11 @@ namespace BaseRest.Queryable
             this.permissions = permissions;
             this.getAllPermissions = getAllPermissions;
 
+            this.filters = new List<IFilter<TDmn, TPermissions>>();
             this.includes = new List<string>();
             this.isGetAll = isGetAll;
 
-            this.InternalQuery = internalQuery;
-        }
-
-        public IQueryable<TDmn> InternalQuery { get; private set; }
-
-        public void Include(string path)
-        {
-            this.includes.Add(path);
-            this.InternalQuery = this.InternalQuery.Include(path);
+            this.internalQuery = internalQuery;
         }
 
         public void Filter(IFilter<TDmn, TPermissions> filter)
@@ -54,13 +50,23 @@ namespace BaseRest.Queryable
             }
 
             this.isGetAll = false;
-            this.InternalQuery = filter.Apply(this.InternalQuery);
+            this.internalQuery = filter.Apply(this.internalQuery);
+        }
+
+        public void OrderBy(string ordering)
+        {
+            this.internalQuery = this.internalQuery.OrderBy(ordering);
+        }
+
+        public void Include(string path)
+        {
+            this.includes.Add(path);
+            this.internalQuery = this.internalQuery.Include(path);
         }
 
         public IQueryable CreateQuery(Expression expression)
         {
-            Type queryType = typeof(Queryable<,,,>).MakeGenericType(typeof(TDto), typeof(TDmn), typeof(TConverter), typeof(TPermissions));
-            return (IQueryable)Activator.CreateInstance(queryType, new object[] { this, expression });
+            return new Queryable<TDmn, TDto, TConverter, TPermissions>(this, expression);
         }
 
         public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
@@ -91,7 +97,7 @@ namespace BaseRest.Queryable
                 throw new RestfulException(this.getAllPermissions);
             }
 
-            TDmn[] domains = this.InternalQuery.ToArray();
+            TDmn[] domains = this.internalQuery.ToArray();
 
             TConverter converter = new TConverter();
             string[] includes = this.includes.ToArray();

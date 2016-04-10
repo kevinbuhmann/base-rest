@@ -14,14 +14,17 @@ namespace BaseRest.General
         where TDto : class, IDto
         where TPermissions : IPermissions
     {
-        public string[] Includes { get; }
-
         public IFilter<TDmn, TPermissions>[] Filters { get; }
 
-        private QueryOptions(string[] includes, IFilter<TDmn, TPermissions>[] filters)
+        public string[] OrderBy { get; }
+
+        public string[] Includes { get; }
+
+        public QueryOptions(IFilter<TDmn, TPermissions>[] filters, string[] orderBy, string[] includes)
         {
-            this.Includes = includes;
             this.Filters = filters;
+            this.OrderBy = orderBy;
+            this.Includes = includes;
         }
 
         public static QueryOptions<TDmn, TDto, TPermissions> FromRequestUri(Uri requestUri)
@@ -29,19 +32,24 @@ namespace BaseRest.General
             string queryString = requestUri.Query.ToLower();
             NameValueCollection query = HttpUtility.ParseQueryString(queryString);
 
-            // ?include=postalcode,funds
-            string include = query["include"];
-            string[] includes = !string.IsNullOrEmpty(include) ?
-                include.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries) : null;
-
             // ?filter=bypostalcodenumber:63755|filtername:param1_param2_arrayvalue1,arrayvalue2
-            string filter = query["filter"];
-            string[] filterStrings = !string.IsNullOrEmpty(filter) ?
-                filter.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries) : null;
+            string filterList = query["filter"];
+            string[] filterStrings = !string.IsNullOrEmpty(filterList) ?
+                filterList.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries) : null;
             IFilter<TDmn, TPermissions>[] filters = filterStrings?
                 .Select(filterString => GetFilter(filterString)).ToArray();
 
-            return new QueryOptions<TDmn, TDto, TPermissions>(includes, filters);
+            // ?order-by=name,-id
+            string orderByList = query["order-by"];
+            string[] orderBy = !string.IsNullOrEmpty(orderByList) ?
+                orderByList.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries) : null;
+
+            // ?include=postalcode,funds
+            string includeList = query["include"];
+            string[] includes = !string.IsNullOrEmpty(includeList) ?
+                includeList.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries) : null;
+
+            return new QueryOptions<TDmn, TDto, TPermissions>(filters, orderBy, includes);
         }
 
         private static IFilter<TDmn, TPermissions> GetFilter(string filterString)

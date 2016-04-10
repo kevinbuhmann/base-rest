@@ -11,6 +11,7 @@ namespace BaseRest.Domain
     {
         public BaseDbContext(string nameOrConnectionString) : base(nameOrConnectionString)
         {
+            this.Configuration.LazyLoadingEnabled = false;
             this.Database.Log = (logText) => Debug.WriteLine(logText);
         }
 

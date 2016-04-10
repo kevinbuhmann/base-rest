@@ -5,12 +5,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic;
 using System.Linq.Expressions;
 using System.Net;
 
 namespace BaseRest.Queryable
 {
-    public class Queryable<TDmn, TDto, TConverter, TPermissions> : IOrderedQueryable<TDto>
+    public sealed class Queryable<TDmn, TDto, TConverter, TPermissions> : IOrderedQueryable<TDto>
         where TDmn : class, IDomain
         where TDto : class, IDto
         where TConverter : IConverter<TDmn, TDto, TPermissions>, new()
@@ -43,15 +44,21 @@ namespace BaseRest.Queryable
             this.Expression = expression;
         }
 
-        public Queryable<TDmn, TDto, TConverter, TPermissions> Include(string path)
-        {
-            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).Include(path);
-            return this;
-        }
-
         public Queryable<TDmn, TDto, TConverter, TPermissions> Filter(IFilter<TDmn, TPermissions> filter)
         {
             (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).Filter(filter);
+            return this;
+        }
+
+        public Queryable<TDmn, TDto, TConverter, TPermissions> OrderBy(string ordering)
+        {
+            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).OrderBy(ordering);
+            return this;
+        }
+
+        public Queryable<TDmn, TDto, TConverter, TPermissions> Include(string path)
+        {
+            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).Include(path);
             return this;
         }
 
@@ -59,14 +66,21 @@ namespace BaseRest.Queryable
         {
             options.ValidateNotNullParameter(nameof(options));
 
-            foreach (string include in options.Includes ?? new string[0])
-            {
-                this.Include(include);
-            }
-
             foreach (IFilter<TDmn, TPermissions> filter in options.Filters ?? new IFilter<TDmn, TPermissions>[0])
             {
                 this.Filter(filter);
+            }
+
+            string ordering = string.Join(",", (options.OrderBy ?? new string[0])
+                .Select(i => i.StartsWith("-") ? $"{i.Substring(1)} descending" : i));
+            if (!string.IsNullOrEmpty(ordering))
+            {
+                this.OrderBy(ordering);
+            }
+
+            foreach (string include in options.Includes ?? new string[0])
+            {
+                this.Include(include);
             }
 
             return this;
