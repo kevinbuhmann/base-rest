@@ -24,13 +24,16 @@ namespace BaseRest.General
 
         public int? Take { get; }
 
-        public QueryOptions(IFilter<TDmn, TPermissions>[] filters, string[] includes, string[] orderBy, int? skip, int? take)
+        public DeletedState? DeletedState { get; }
+
+        public QueryOptions(IFilter<TDmn, TPermissions>[] filters, string[] includes, string[] orderBy, int? skip, int? take, DeletedState? deletedState)
         {
             this.Filters = filters;
             this.Includes = includes;
             this.OrderBy = orderBy;
             this.Skip = skip;
             this.Take = take;
+            this.DeletedState = deletedState;
         }
 
         public static QueryOptions<TDmn, TDto, TPermissions> FromRequestUri(Uri requestUri)
@@ -63,7 +66,12 @@ namespace BaseRest.General
             string takeNumber = query["take"];
             int? take = !string.IsNullOrEmpty(takeNumber) ? takeNumber.ToIntOrNull() : null;
 
-            return new QueryOptions<TDmn, TDto, TPermissions>(filters, includes, orderBy, skip, take);
+            // ?deleted-state=(nondeleted|deleted|all)
+            string deletedStateString = query["deleted-state"];
+            DeletedState? deletedState = !string.IsNullOrEmpty(deletedStateString) ?
+                deletedStateString.ToEnumOrNull<DeletedState>() : null;
+
+            return new QueryOptions<TDmn, TDto, TPermissions>(filters, includes, orderBy, skip, take, deletedState);
         }
 
         private static IFilter<TDmn, TPermissions> GetFilter(string filterString)

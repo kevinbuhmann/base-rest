@@ -7,13 +7,25 @@ namespace BaseRest.Extensions
     {
         public static int? ToIntOrNull(this string str)
         {
-            int value = 0;
+            int value = default(int);
             bool parsed = false;
             if (!string.IsNullOrEmpty(str))
             {
                 parsed = int.TryParse(str, out value);
             }
             return parsed ? value : (int?)null;
+        }
+
+        public static TEnum? ToEnumOrNull<TEnum>(this string str)
+            where TEnum : struct
+        {
+            TEnum value = default(TEnum);
+            bool parsed = false;
+            if (!string.IsNullOrEmpty(str))
+            {
+                parsed = Enum.TryParse(str, true, out value);
+            }
+            return parsed ? value : (TEnum?)null;
         }
 
         public static string CamelCaseToSplitLower(this string source)

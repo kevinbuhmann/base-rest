@@ -62,6 +62,12 @@ namespace BaseRest.Queryable
             return this;
         }
 
+        public Queryable<TDmn, TDto, TConverter, TPermissions> WithDeletedState(DeletedState deletedState)
+        {
+            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).DeletedState = deletedState;
+            return this;
+        }
+
         public Queryable<TDmn, TDto, TConverter, TPermissions> WithOptions(QueryOptions<TDmn, TDto, TPermissions> options)
         {
             options.ValidateNotNullParameter(nameof(options));
@@ -80,6 +86,11 @@ namespace BaseRest.Queryable
             foreach (string include in options.Includes ?? new string[0])
             {
                 this.Include(include);
+            }
+
+            if (options.DeletedState.HasValue)
+            {
+                this.WithDeletedState(options.DeletedState.Value);
             }
 
             // dto options (modify expression)

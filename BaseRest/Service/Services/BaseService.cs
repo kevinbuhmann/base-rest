@@ -41,7 +41,7 @@ namespace BaseRest.Service.Services
         public virtual Queryable<TDmn, TDto, TConverter, TPermissions> Get(IEnumerable<int> ids = null)
         {
             bool isGetAll = true;
-            IQueryable<TDmn> query = this.DbSet.Where(dmn => !dmn.UtcDateDeleted.HasValue);
+            IQueryable<TDmn> query = this.DbSet;
 
             if (ids != null && ids.Any())
             {

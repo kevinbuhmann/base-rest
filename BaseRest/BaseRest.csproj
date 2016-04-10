@@ -82,6 +82,7 @@
     <Compile Include="Extensions\ValidateExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
+    <Compile Include="General\DeletedState.cs" />
     <Compile Include="General\QueryOptions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Queryable\ExpressionTreeModifier.cs" />

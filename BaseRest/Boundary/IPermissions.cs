@@ -5,5 +5,7 @@
         bool IsInternal();
 
         bool IsSuper();
+
+        bool IsSuperOrInternal();
     }
 }

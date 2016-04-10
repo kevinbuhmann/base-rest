@@ -1,4 +1,5 @@
 ﻿using BaseRest.Boundary;
+using BaseRest.General;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace BaseRest.Service.Converters
         where TDto : class, IDto
         where TPermissions : IPermissions
     {
-        public abstract TDto Convert(TDmn domain, TPermissions permissions, string[] includes);
+        public abstract TDto Convert(TDmn domain, TPermissions permissions, string[] includes, DeletedState deletedState);
 
         protected TProp HandlePermissions<TProp>(
             bool hasPermissions,
@@ -36,6 +37,7 @@ namespace BaseRest.Service.Converters
             List<string> excludedProperties,
             TDmn domain,
             string[] includes,
+            DeletedState deletedState,
             Expression<Func<TDmn, TDmnProp>> dmnExpression,
             Expression<Func<TDto, TDtoProp>> dtoExpression,
             IConverter<TDmnProp, TDtoProp, TPermissions> converter)
@@ -48,7 +50,7 @@ namespace BaseRest.Service.Converters
             }
 
             return hasPermissions && HasInclude(dtoExpression, includes) ?
-                ExecuteMemberAndConvert(permissions, domain, includes, dmnExpression, dtoExpression, converter) : default(TDtoProp);
+                ExecuteMemberAndConvert(permissions, domain, includes, deletedState, dmnExpression, dtoExpression, converter) : default(TDtoProp);
         }
 
         protected TDtoProp[] HandlePermissions<TDmnProp, TDtoProp>(
@@ -57,6 +59,7 @@ namespace BaseRest.Service.Converters
             List<string> excludedProperties,
             TDmn domain,
             string[] includes,
+            DeletedState deletedState,
             Expression<Func<TDmn, IEnumerable<TDmnProp>>> dmnExpression,
             Expression<Func<TDto, TDtoProp[]>> dtoExpression,
             IConverter<TDmnProp, TDtoProp, TPermissions> converter)
@@ -69,13 +72,14 @@ namespace BaseRest.Service.Converters
             }
 
             return hasPermissions && HasInclude(dtoExpression, includes) ?
-                ExecuteMemberAndConvert(permissions, domain, includes, dmnExpression, dtoExpression, converter) : null;
+                ExecuteMemberAndConvert(permissions, domain, includes, deletedState, dmnExpression, dtoExpression, converter) : null;
         }
 
         private static TDtoProp ExecuteMemberAndConvert<TDmnProp, TDtoProp>(
             TPermissions permissions,
             TDmn domain,
             string[] includes,
+            DeletedState deletedState,
             Expression<Func<TDmn, TDmnProp>> dmnExpression,
             Expression<Func<TDto, TDtoProp>> dtoExpression,
             IConverter<TDmnProp, TDtoProp, TPermissions> converter)
@@ -87,14 +91,15 @@ namespace BaseRest.Service.Converters
 
             TDmnProp domainProperty = ExecuteMember(dmnExpression, domain);
 
-            return !domainProperty.UtcDateDeleted.HasValue ?
-                converter.Convert(domainProperty, permissions, nextIncludes) : null;
+            return deletedState == DeletedState.All || domainProperty.UtcDateDeleted.HasValue == (deletedState == DeletedState.Deleted) ?
+                converter.Convert(domainProperty, permissions, nextIncludes, deletedState) : null;
         }
 
         private static TDtoProp[] ExecuteMemberAndConvert<TDmnProp, TDtoProp>(
             TPermissions permissions,
             TDmn domain,
             string[] includes,
+            DeletedState deletedState,
             Expression<Func<TDmn, IEnumerable<TDmnProp>>> dmnExpression,
             Expression<Func<TDto, TDtoProp[]>> dtoExpression,
             IConverter<TDmnProp, TDtoProp, TPermissions> converter)
@@ -105,11 +110,11 @@ namespace BaseRest.Service.Converters
             string[] nextIncludes = GetNextIncludes(includes, dtoMemberName);
 
             TDmnProp[] domainProperty = ExecuteMember(dmnExpression, domain)
-                .Where(dmn => !dmn.UtcDateDeleted.HasValue)
+                .Where(dmn => deletedState == DeletedState.All || dmn.UtcDateDeleted.HasValue == (deletedState == DeletedState.Deleted))
                 .ToArray();
 
             return domainProperty
-                .Select(i => converter.Convert(i, permissions, nextIncludes))
+                .Select(i => converter.Convert(i, permissions, nextIncludes, deletedState))
                 .ToArray();
         }
 

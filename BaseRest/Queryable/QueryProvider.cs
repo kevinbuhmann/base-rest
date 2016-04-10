@@ -27,6 +27,8 @@ namespace BaseRest.Queryable
         private List<IFilter<TDmn, TPermissions>> filters;
         private List<string> includes;
 
+        public DeletedState DeletedState { get; set; }
+
         internal QueryProvider(IQueryable<TDmn> internalQuery, TPermissions permissions, HttpStatusCode getAllPermissions, bool isGetAll)
         {
             internalQuery.ValidateNotNullParameter(nameof(internalQuery));
@@ -35,11 +37,14 @@ namespace BaseRest.Queryable
             this.permissions = permissions;
             this.getAllPermissions = getAllPermissions;
 
-            this.filters = new List<IFilter<TDmn, TPermissions>>();
-            this.includes = new List<string>();
+            this.internalQuery = internalQuery;
             this.isGetAll = isGetAll;
 
-            this.internalQuery = internalQuery;
+            this.filters = new List<IFilter<TDmn, TPermissions>>();
+            this.includes = new List<string>();
+
+            this.DeletedState = DeletedState.NonDeleted;
+
         }
 
         public void Filter(IFilter<TDmn, TPermissions> filter)
@@ -95,18 +100,25 @@ namespace BaseRest.Queryable
 
         private object Execute(Expression expression, bool isEnumerable)
         {
-            if (this.getAllPermissions != HttpStatusCode.OK && this.isGetAll)
+            if (this.isGetAll && this.getAllPermissions != HttpStatusCode.OK)
             {
                 throw new RestfulException(this.getAllPermissions);
             }
 
-            TDmn[] domains = this.internalQuery.ToArray();
+            if (this.DeletedState != DeletedState.NonDeleted && !this.permissions.IsSuperOrInternal())
+            {
+                throw new RestfulException(HttpStatusCode.Forbidden);
+            }
+
+            TDmn[] domains = this.internalQuery
+                .Where(dmn => this.DeletedState == DeletedState.All || dmn.UtcDateDeleted.HasValue == (this.DeletedState == DeletedState.Deleted))
+                .ToArray();
 
             TConverter converter = new TConverter();
             string[] includes = this.includes.ToArray();
 
             IQueryable<TDto> dtos = domains
-                .Select(dmn => converter.Convert(dmn, this.permissions, includes))
+                .Select(dmn => converter.Convert(dmn, this.permissions, includes, this.DeletedState))
                 .ToArray()
                 .AsQueryable();
 
