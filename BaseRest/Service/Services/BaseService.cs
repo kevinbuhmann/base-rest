@@ -11,7 +11,7 @@ namespace BaseRest.Service.Services
 {
     public abstract class BaseService<TDmn, TDto, TConverter, TContext, TPermissions> : IService<TDmn, TDto, TConverter, TPermissions>
         where TDmn : class, IDomain
-        where TDto : class, IDto
+        where TDto : class, IDto, new()
         where TConverter : IConverter<TDmn, TDto, TPermissions>, new()
         where TContext : BaseDbContext, new()
         where TPermissions : IPermissions

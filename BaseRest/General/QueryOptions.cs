@@ -11,7 +11,7 @@ namespace BaseRest.General
 {
     public sealed class QueryOptions<TDmn, TDto, TPermissions>
         where TDmn : class, IDomain
-        where TDto : class, IDto
+        where TDto : class, IDto, new()
         where TPermissions : IPermissions
     {
         public IFilter<TDmn, TPermissions>[] Filters { get; }

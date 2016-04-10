@@ -8,7 +8,7 @@ namespace BaseRest.Web
     [RestfulExceptionFilter]
     public abstract class BaseController<TDmn, TDto, TConverter, TService, TPermissions> : ApiController
         where TDmn : class, IDomain
-        where TDto : class, IDto
+        where TDto : class, IDto, new()
         where TConverter : IConverter<TDmn, TDto, TPermissions>, new()
         where TService : IService<TDmn, TDto, TConverter, TPermissions>
         where TPermissions : IPermissions

@@ -6,6 +6,8 @@ namespace BaseRest.Service.Dto
     {
         public int Id { get; set; }
 
+        public bool IsDeleted { get; set; }
+
         public string[] ExcludedProperties { get; set; }
     }
 }

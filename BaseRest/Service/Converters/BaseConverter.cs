@@ -9,10 +9,20 @@ namespace BaseRest.Service.Converters
 {
     public abstract class BaseConverter<TDmn, TDto, TPermissions> : IConverter<TDmn, TDto, TPermissions>
         where TDmn : class, IDomain
-        where TDto : class, IDto
+        where TDto : class, IDto, new()
         where TPermissions : IPermissions
     {
-        public abstract TDto Convert(TDmn domain, TPermissions permissions, string[] includes, DeletedState deletedState);
+        public virtual TDto Convert(TDmn domain, TPermissions permissions, string[] includes, DeletedState deletedState)
+        {
+            List<string> excludedProperties = new List<string>();
+
+            return new TDto()
+            {
+                Id = domain.Id,
+                IsDeleted = this.GetIsDeleted(domain, permissions, includes, excludedProperties),
+                ExcludedProperties = excludedProperties.ToArray()
+            };
+        }
 
         protected TProp HandlePermissions<TProp>(
             bool hasPermissions,
@@ -42,7 +52,7 @@ namespace BaseRest.Service.Converters
             Expression<Func<TDto, TDtoProp>> dtoExpression,
             IConverter<TDmnProp, TDtoProp, TPermissions> converter)
             where TDmnProp : class, IDomain
-            where TDtoProp : class, IDto
+            where TDtoProp : class, IDto, new()
         {
             if (!hasPermissions)
             {
@@ -64,7 +74,7 @@ namespace BaseRest.Service.Converters
             Expression<Func<TDto, TDtoProp[]>> dtoExpression,
             IConverter<TDmnProp, TDtoProp, TPermissions> converter)
             where TDmnProp : class, IDomain
-            where TDtoProp : class, IDto
+            where TDtoProp : class, IDto, new()
         {
             if (!hasPermissions)
             {
@@ -84,7 +94,7 @@ namespace BaseRest.Service.Converters
             Expression<Func<TDto, TDtoProp>> dtoExpression,
             IConverter<TDmnProp, TDtoProp, TPermissions> converter)
             where TDmnProp : class, IDomain
-            where TDtoProp : class, IDto
+            where TDtoProp : class, IDto, new()
         {
             string dtoMemberName = GetMemberName(dtoExpression).ToLower();
             string[] nextIncludes = GetNextIncludes(includes, dtoMemberName);
@@ -104,7 +114,7 @@ namespace BaseRest.Service.Converters
             Expression<Func<TDto, TDtoProp[]>> dtoExpression,
             IConverter<TDmnProp, TDtoProp, TPermissions> converter)
             where TDmnProp : class, IDomain
-            where TDtoProp : class, IDto
+            where TDtoProp : class, IDto, new()
         {
             string dtoMemberName = GetMemberName(dtoExpression).ToLower();
             string[] nextIncludes = GetNextIncludes(includes, dtoMemberName);
@@ -116,6 +126,18 @@ namespace BaseRest.Service.Converters
             return domainProperty
                 .Select(i => converter.Convert(i, permissions, nextIncludes, deletedState))
                 .ToArray();
+        }
+
+        private bool GetIsDeleted(TDmn domain, TPermissions permissions, string[] includes, List<string> excludedProperties)
+        {
+            return this.HandlePermissions(
+                hasPermissions: permissions.IsSuperOrInternal(),
+                excludedProperties: excludedProperties,
+                domain: domain,
+                includes: includes,
+                dmnExpression: i => i.UtcDateDeleted.HasValue,
+                dtoExpression: i => i.IsDeleted,
+                autoInclude: true);
         }
 
         private static TProp ExecuteMember<TProp>(Expression<Func<TDmn, TProp>> expression, TDmn instance)

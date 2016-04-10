@@ -4,6 +4,8 @@
     {
         int Id { get; set; }
 
-        string[] ExcludedProperties { get; }
+        bool IsDeleted { get; set; }
+
+        string[] ExcludedProperties { get; set; }
     }
 }

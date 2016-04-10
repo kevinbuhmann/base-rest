@@ -13,7 +13,7 @@ namespace BaseRest.Queryable
 {
     public sealed class Queryable<TDmn, TDto, TConverter, TPermissions> : IOrderedQueryable<TDto>
         where TDmn : class, IDomain
-        where TDto : class, IDto
+        where TDto : class, IDto, new()
         where TConverter : IConverter<TDmn, TDto, TPermissions>, new()
         where TPermissions : IPermissions
     {

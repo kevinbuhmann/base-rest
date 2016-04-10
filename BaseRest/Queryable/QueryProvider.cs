@@ -14,7 +14,7 @@ namespace BaseRest.Queryable
 {
     public sealed class QueryProvider<TDmn, TDto, TConverter, TPermissions> : IQueryProvider
         where TDmn : class, IDomain
-        where TDto : class, IDto
+        where TDto : class, IDto, new()
         where TConverter : IConverter<TDmn, TDto, TPermissions>, new()
         where TPermissions : IPermissions
     {
