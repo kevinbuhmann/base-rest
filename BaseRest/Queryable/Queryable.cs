@@ -17,6 +17,8 @@ namespace BaseRest.Queryable
         where TConverter : IConverter<TDmn, TDto, TPermissions>, new()
         where TPermissions : IPermissions
     {
+        private bool optionsApplied = false;
+
         public Type ElementType
         {
             get
@@ -27,7 +29,7 @@ namespace BaseRest.Queryable
 
         public IQueryProvider Provider { get; }
 
-        public Expression Expression { get; }
+        public Expression Expression { get; private set; }
 
         public Queryable(IQueryable<TDmn> internalQuery, TPermissions permissions, HttpStatusCode getAllPermissions, bool isGetAll)
         {
@@ -46,111 +48,56 @@ namespace BaseRest.Queryable
 
         public Queryable<TDmn, TDto, TConverter, TPermissions> Filter(IFilter<TDmn, TPermissions> filter)
         {
+            filter.ValidateNotNullParameter(nameof(filter));
+
             (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).Filter(filter);
-            return this;
-        }
-
-        public Queryable<TDmn, TDto, TConverter, TPermissions> OrderBy(string ordering)
-        {
-            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).OrderBy(ordering);
-            return this;
-        }
-
-        public Queryable<TDmn, TDto, TConverter, TPermissions> OrderBy<TKey>(Expression<Func<TDmn, TKey>> keySelector)
-        {
-            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).OrderBy(keySelector);
-            return this;
-        }
-
-        public Queryable<TDmn, TDto, TConverter, TPermissions> OrderBy<TKey>(Expression<Func<TDmn, TKey>> keySelector, IComparer<TKey> comparer)
-        {
-            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).OrderBy(keySelector, comparer);
-            return this;
-        }
-
-        public Queryable<TDmn, TDto, TConverter, TPermissions> OrderByDescending<TKey>(Expression<Func<TDmn, TKey>> keySelector)
-        {
-            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).OrderByDescending(keySelector);
-            return this;
-        }
-
-        public Queryable<TDmn, TDto, TConverter, TPermissions> OrderByDescending<TKey>(Expression<Func<TDmn, TKey>> keySelector, IComparer<TKey> comparer)
-        {
-            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).OrderByDescending(keySelector, comparer);
-            return this;
-        }
-
-        public Queryable<TDmn, TDto, TConverter, TPermissions> ThenBy<TKey>(Expression<Func<TDmn, TKey>> keySelector)
-        {
-            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).ThenBy(keySelector);
-            return this;
-        }
-
-        public Queryable<TDmn, TDto, TConverter, TPermissions> ThenBy<TKey>(Expression<Func<TDmn, TKey>> keySelector, IComparer<TKey> comparer)
-        {
-            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).ThenBy(keySelector, comparer);
-            return this;
-        }
-
-        public Queryable<TDmn, TDto, TConverter, TPermissions> ThenByDescending<TKey>(Expression<Func<TDmn, TKey>> keySelector)
-        {
-            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).ThenByDescending(keySelector);
-            return this;
-        }
-
-        public Queryable<TDmn, TDto, TConverter, TPermissions> ThenByDescending<TKey>(Expression<Func<TDmn, TKey>> keySelector, IComparer<TKey> comparer)
-        {
-            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).ThenByDescending(keySelector, comparer);
-            return this;
-        }
-
-        public Queryable<TDmn, TDto, TConverter, TPermissions> Skip(int count)
-        {
-            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).Skip(count);
-            return this;
-        }
-
-        public Queryable<TDmn, TDto, TConverter, TPermissions> Take(int count)
-        {
-            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).Take(count);
             return this;
         }
 
         public Queryable<TDmn, TDto, TConverter, TPermissions> Include(string path)
         {
+            path.ValidateNotNullParameter(nameof(path));
+
             (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).Include(path);
             return this;
         }
 
-        public Queryable<TDmn, TDto, TConverter, TPermissions> ApplyOptions(QueryOptions<TDmn, TDto, TPermissions> options)
+        public Queryable<TDmn, TDto, TConverter, TPermissions> WithOptions(QueryOptions<TDmn, TDto, TPermissions> options)
         {
             options.ValidateNotNullParameter(nameof(options));
 
+            if (this.optionsApplied)
+            {
+                throw new Exception("options alread applied");
+            }
+
+            // domain options (modifiy internal query)
             foreach (IFilter<TDmn, TPermissions> filter in options.Filters ?? new IFilter<TDmn, TPermissions>[0])
             {
                 this.Filter(filter);
             }
 
+            foreach (string include in options.Includes ?? new string[0])
+            {
+                this.Include(include);
+            }
+
+            // dto options (modify expression)
             string ordering = string.Join(",", (options.OrderBy ?? new string[0])
                 .Select(i => i.StartsWith("-") ? $"{i.Substring(1)} descending" : i));
             if (!string.IsNullOrEmpty(ordering))
             {
-                this.OrderBy(ordering);
+                this.Expression = this.OrderBy(ordering).Expression;
             }
 
             if (options.Skip.HasValue)
             {
-                this.Skip(options.Skip.Value);
+                this.Expression = this.Skip(options.Skip.Value).Expression;
             }
 
             if (options.Take.HasValue)
             {
-                this.Take(options.Take.Value);
-            }
-
-            foreach (string include in options.Includes ?? new string[0])
-            {
-                this.Include(include);
+                this.Expression = this.Take(options.Take.Value).Expression;
             }
 
             return this;

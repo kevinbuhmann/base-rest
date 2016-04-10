@@ -44,6 +44,8 @@ namespace BaseRest.Queryable
 
         public void Filter(IFilter<TDmn, TPermissions> filter)
         {
+            filter.ValidateNotNullParameter(nameof(filter));
+
             HttpStatusCode filterPermissions = filter.HasPermissions(this.permissions);
             if (filterPermissions != HttpStatusCode.OK)
             {
@@ -54,85 +56,15 @@ namespace BaseRest.Queryable
             this.internalQuery = filter.Apply(this.internalQuery);
         }
 
-        public void OrderBy(string ordering)
-        {
-            this.internalQuery = this.internalQuery.OrderBy(ordering);
-        }
-
-        public void OrderBy<TKey>(Expression<Func<TDmn, TKey>> keySelector)
-        {
-            this.internalQuery = this.internalQuery.OrderBy(keySelector);
-        }
-
-        public void OrderBy<TKey>(Expression<Func<TDmn, TKey>> keySelector, IComparer<TKey> comparer)
-        {
-            this.internalQuery = this.internalQuery.OrderBy(keySelector, comparer);
-        }
-
-        public void OrderByDescending<TKey>(Expression<Func<TDmn, TKey>> keySelector)
-        {
-            this.internalQuery = this.internalQuery.OrderByDescending(keySelector);
-        }
-
-        public void OrderByDescending<TKey>(Expression<Func<TDmn, TKey>> keySelector, IComparer<TKey> comparer)
-        {
-            this.internalQuery = this.internalQuery.OrderByDescending(keySelector, comparer);
-        }
-
-        public void ThenBy<TKey>(Expression<Func<TDmn, TKey>> keySelector)
-        {
-            if (!typeof(IOrderedQueryable<TDmn>).IsAssignableFrom(this.internalQuery.Expression.Type))
-            {
-                throw new InvalidOperationException("Expression is not ordered. OrderBy() must be called before ThenBy().");
-            }
-
-            this.internalQuery = (this.internalQuery as IOrderedQueryable<TDmn>).ThenBy(keySelector);
-        }
-
-        public void ThenBy<TKey>(Expression<Func<TDmn, TKey>> keySelector, IComparer<TKey> comparer)
-        {
-            if (!typeof(IOrderedQueryable<TDmn>).IsAssignableFrom(this.internalQuery.Expression.Type))
-            {
-                throw new InvalidOperationException("Expression is not ordered. OrderBy() must be called before ThenBy().");
-            }
-
-            this.internalQuery = (this.internalQuery as IOrderedQueryable<TDmn>).ThenBy(keySelector, comparer);
-        }
-
-        public void ThenByDescending<TKey>(Expression<Func<TDmn, TKey>> keySelector)
-        {
-            if (!typeof(IOrderedQueryable<TDmn>).IsAssignableFrom(this.internalQuery.Expression.Type))
-            {
-                throw new InvalidOperationException("Expression is not ordered. OrderBy() must be called before ThenBy().");
-            }
-
-            this.internalQuery = (this.internalQuery as IOrderedQueryable<TDmn>).ThenByDescending(keySelector);
-        }
-
-        public void ThenByDescending<TKey>(Expression<Func<TDmn, TKey>> keySelector, IComparer<TKey> comparer)
-        {
-            if (!typeof(IOrderedQueryable<TDmn>).IsAssignableFrom(this.internalQuery.Expression.Type))
-            {
-                throw new InvalidOperationException("Expression is not ordered. OrderBy() must be called before ThenBy().");
-            }
-
-            this.internalQuery = (this.internalQuery as IOrderedQueryable<TDmn>).ThenByDescending(keySelector, comparer);
-        }
-
-        public void Skip(int count)
-        {
-            this.internalQuery = this.internalQuery.Skip(count);
-        }
-
-        public void Take(int count)
-        {
-            this.internalQuery = this.internalQuery.Take(count);
-        }
-
         public void Include(string path)
         {
-            this.includes.Add(path);
-            this.internalQuery = this.internalQuery.Include(path);
+            path.ValidateNotNullParameter(nameof(path));
+
+            if (!this.includes.Contains(path))
+            {
+                this.includes.Add(path);
+                this.internalQuery = this.internalQuery.Include(path);
+            }
         }
 
         public IQueryable CreateQuery(Expression expression)

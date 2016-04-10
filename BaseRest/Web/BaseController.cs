@@ -24,7 +24,7 @@ namespace BaseRest.Web
         public virtual IHttpActionResult Get(int id)
         {
             TDto dto = this.Service.Get(id)
-                .ApplyOptions(QueryOptions<TDmn, TDto, TPermissions>.FromRequestUri(this.Request.RequestUri))
+                .WithOptions(QueryOptions<TDmn, TDto, TPermissions>.FromRequestUri(this.Request.RequestUri))
                 .FirstOrDefault();
 
             return dto != null ?
@@ -35,7 +35,7 @@ namespace BaseRest.Web
         public virtual IHttpActionResult Get([UrlArray]int[] ids, string include = null)
         {
             TDto[] dtos = this.Service.Get(ids)
-                .ApplyOptions(QueryOptions<TDmn, TDto, TPermissions>.FromRequestUri(this.Request.RequestUri))
+                .WithOptions(QueryOptions<TDmn, TDto, TPermissions>.FromRequestUri(this.Request.RequestUri))
                 .ToArray();
 
             return dtos != null ?

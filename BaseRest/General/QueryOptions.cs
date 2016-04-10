@@ -16,21 +16,21 @@ namespace BaseRest.General
     {
         public IFilter<TDmn, TPermissions>[] Filters { get; }
 
+        public string[] Includes { get; }
+
         public string[] OrderBy { get; }
 
         public int? Skip { get; }
 
         public int? Take { get; }
 
-        public string[] Includes { get; }
-
-        public QueryOptions(IFilter<TDmn, TPermissions>[] filters, string[] orderBy, int? skip, int? take, string[] includes)
+        public QueryOptions(IFilter<TDmn, TPermissions>[] filters, string[] includes, string[] orderBy, int? skip, int? take)
         {
             this.Filters = filters;
+            this.Includes = includes;
             this.OrderBy = orderBy;
             this.Skip = skip;
             this.Take = take;
-            this.Includes = includes;
         }
 
         public static QueryOptions<TDmn, TDto, TPermissions> FromRequestUri(Uri requestUri)
@@ -45,6 +45,11 @@ namespace BaseRest.General
             IFilter<TDmn, TPermissions>[] filters = filterStrings?
                 .Select(filterString => GetFilter(filterString)).ToArray();
 
+            // ?include=postalcode,funds
+            string includeList = query["include"];
+            string[] includes = !string.IsNullOrEmpty(includeList) ?
+                includeList.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries) : null;
+
             // ?order-by=name,-id
             string orderByList = query["order-by"];
             string[] orderBy = !string.IsNullOrEmpty(orderByList) ?
@@ -58,12 +63,7 @@ namespace BaseRest.General
             string takeNumber = query["take"];
             int? take = !string.IsNullOrEmpty(takeNumber) ? takeNumber.ToIntOrNull() : null;
 
-            // ?include=postalcode,funds
-            string includeList = query["include"];
-            string[] includes = !string.IsNullOrEmpty(includeList) ?
-                includeList.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries) : null;
-
-            return new QueryOptions<TDmn, TDto, TPermissions>(filters, orderBy, skip, take, includes);
+            return new QueryOptions<TDmn, TDto, TPermissions>(filters, includes, orderBy, skip, take);
         }
 
         private static IFilter<TDmn, TPermissions> GetFilter(string filterString)
