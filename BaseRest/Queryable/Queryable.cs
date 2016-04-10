@@ -11,7 +11,7 @@ using System.Net;
 
 namespace BaseRest.Queryable
 {
-    public sealed class Queryable<TDmn, TDto, TConverter, TPermissions> : IQueryable<TDto>
+    public sealed class Queryable<TDmn, TDto, TConverter, TPermissions> : IOrderedQueryable<TDto>
         where TDmn : class, IDomain
         where TDto : class, IDto
         where TConverter : IConverter<TDmn, TDto, TPermissions>, new()
@@ -77,6 +77,30 @@ namespace BaseRest.Queryable
         public Queryable<TDmn, TDto, TConverter, TPermissions> OrderByDescending<TKey>(Expression<Func<TDmn, TKey>> keySelector, IComparer<TKey> comparer)
         {
             (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).OrderByDescending(keySelector, comparer);
+            return this;
+        }
+
+        public Queryable<TDmn, TDto, TConverter, TPermissions> ThenBy<TKey>(Expression<Func<TDmn, TKey>> keySelector)
+        {
+            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).ThenBy(keySelector);
+            return this;
+        }
+
+        public Queryable<TDmn, TDto, TConverter, TPermissions> ThenBy<TKey>(Expression<Func<TDmn, TKey>> keySelector, IComparer<TKey> comparer)
+        {
+            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).ThenBy(keySelector, comparer);
+            return this;
+        }
+
+        public Queryable<TDmn, TDto, TConverter, TPermissions> ThenByDescending<TKey>(Expression<Func<TDmn, TKey>> keySelector)
+        {
+            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).ThenByDescending(keySelector);
+            return this;
+        }
+
+        public Queryable<TDmn, TDto, TConverter, TPermissions> ThenByDescending<TKey>(Expression<Func<TDmn, TKey>> keySelector, IComparer<TKey> comparer)
+        {
+            (this.Provider as QueryProvider<TDmn, TDto, TConverter, TPermissions>).ThenByDescending(keySelector, comparer);
             return this;
         }
 

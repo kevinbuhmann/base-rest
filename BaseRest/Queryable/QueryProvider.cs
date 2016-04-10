@@ -79,6 +79,46 @@ namespace BaseRest.Queryable
             this.internalQuery = this.internalQuery.OrderByDescending(keySelector, comparer);
         }
 
+        public void ThenBy<TKey>(Expression<Func<TDmn, TKey>> keySelector)
+        {
+            if (!typeof(IOrderedQueryable<TDmn>).IsAssignableFrom(this.internalQuery.Expression.Type))
+            {
+                throw new InvalidOperationException("Expression is not ordered. OrderBy() must be called before ThenBy().");
+            }
+
+            this.internalQuery = (this.internalQuery as IOrderedQueryable<TDmn>).ThenBy(keySelector);
+        }
+
+        public void ThenBy<TKey>(Expression<Func<TDmn, TKey>> keySelector, IComparer<TKey> comparer)
+        {
+            if (!typeof(IOrderedQueryable<TDmn>).IsAssignableFrom(this.internalQuery.Expression.Type))
+            {
+                throw new InvalidOperationException("Expression is not ordered. OrderBy() must be called before ThenBy().");
+            }
+
+            this.internalQuery = (this.internalQuery as IOrderedQueryable<TDmn>).ThenBy(keySelector, comparer);
+        }
+
+        public void ThenByDescending<TKey>(Expression<Func<TDmn, TKey>> keySelector)
+        {
+            if (!typeof(IOrderedQueryable<TDmn>).IsAssignableFrom(this.internalQuery.Expression.Type))
+            {
+                throw new InvalidOperationException("Expression is not ordered. OrderBy() must be called before ThenBy().");
+            }
+
+            this.internalQuery = (this.internalQuery as IOrderedQueryable<TDmn>).ThenByDescending(keySelector);
+        }
+
+        public void ThenByDescending<TKey>(Expression<Func<TDmn, TKey>> keySelector, IComparer<TKey> comparer)
+        {
+            if (!typeof(IOrderedQueryable<TDmn>).IsAssignableFrom(this.internalQuery.Expression.Type))
+            {
+                throw new InvalidOperationException("Expression is not ordered. OrderBy() must be called before ThenBy().");
+            }
+
+            this.internalQuery = (this.internalQuery as IOrderedQueryable<TDmn>).ThenByDescending(keySelector, comparer);
+        }
+
         public void Skip(int count)
         {
             this.internalQuery = this.internalQuery.Skip(count);
